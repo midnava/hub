@@ -40,6 +40,7 @@ public class Hub {
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
                                     HubMessage hubMessage = MessageHubAdapter.deserialize(msg);
+
                                     System.out.println("Received: " + hubMessage);
 
                                     if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {

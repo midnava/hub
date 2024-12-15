@@ -2,10 +2,6 @@ plugins {
     id 'application'
 }
 
-application {
-    mainClass = 'Subscriber'
-}
-
 dependencies {
-    api ":common"
+    implementation project(':common')
 }

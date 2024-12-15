@@ -7,5 +7,5 @@ application {
 }
 
 dependencies {
-    api ":common"
+
 }

@@ -2,10 +2,7 @@ plugins {
     id 'application'
 }
 
-application {
-    mainClass = 'Hub'
-}
 
 dependencies {
-    api ":common"
+    implementation project(':common')
 }
