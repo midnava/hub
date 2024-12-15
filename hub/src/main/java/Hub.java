@@ -46,7 +46,7 @@ public class Hub {
                                     if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {
                                         String topic = hubMessage.getTopic();
                                         subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(ctx.channel());
-                                        HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic");
+                                        HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
                                         ctx.writeAndFlush(MessageHubAdapter.serialize(response));
                                         System.out.println("Subscriber added to topic: " + topic);
                                     } else {

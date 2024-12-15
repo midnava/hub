@@ -28,7 +28,8 @@ public class Subscriber {
                             pipeline.addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
-                                    System.out.println("Received message: " + msg);
+                                    HubMessage hubMessage = MessageHubAdapter.deserialize(msg);
+                                    System.out.println("Received message: " + hubMessage);
                                 }
 
                                 @Override
