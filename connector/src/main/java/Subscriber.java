@@ -1,13 +1,14 @@
 // Subscriber.java
+
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
-import io.netty.util.CharsetUtil;
+
+import java.nio.charset.StandardCharsets;
 
 public class Subscriber {
     private static final String HOST = "localhost";
@@ -26,23 +27,25 @@ public class Subscriber {
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2));
                             pipeline.addLast(new LengthFieldPrepender(2));
-                            pipeline.addLast(new StringDecoder(CharsetUtil.UTF_8));
-                            pipeline.addLast(new StringEncoder(CharsetUtil.UTF_8));
-                            pipeline.addLast(new SimpleChannelInboundHandler<String>() {
+                            pipeline.addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                                 @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, String msg) {
+                                protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
                                     System.out.println("Received message: " + msg);
                                 }
 
                                 @Override
                                 public void channelActive(ChannelHandlerContext ctx) {
                                     System.out.println("Connected to server");
-                                    ctx.writeAndFlush("SUBSCRIBE car")
+                                    ByteBuf buffer = ch.alloc().buffer(1024);
+                                    buffer.writeCharSequence("SUBSCRIBE car", StandardCharsets.UTF_8);
+
+                                    ctx.writeAndFlush(buffer)
                                             .addListener(future -> {
                                                 if (future.isSuccess()) {
                                                     System.out.println("Subscription message sent");
                                                 } else {
-                                                    System.err.println("Failed to send subscription message");
+                                                    System.err.println("Failed to send subscription message: " + future.cause());
+                                                    future.cause().printStackTrace();
                                                 }
                                             });
                                 }

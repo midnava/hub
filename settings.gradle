@@ -2,4 +2,5 @@ rootProject.name = 'hub'
 
 include('hub')
 include('connector')
-include('example')
+include('common')
+//include('example')

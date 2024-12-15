@@ -7,5 +7,5 @@ application {
 }
 
 dependencies {
-    // Netty dependency is inherited from the parent (if applied)
+    api ":common"
 }

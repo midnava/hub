@@ -43,7 +43,7 @@ public class Subscriber {
                                                 if (future.isSuccess()) {
                                                     System.out.println("Subscription message sent");
                                                 } else {
-                                                    System.err.println("Failed to send subscription message");
+                                                    System.err.println("Failed to send subscription message: " + future.cause());
                                                 }
                                             });
                                 }

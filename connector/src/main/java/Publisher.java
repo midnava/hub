@@ -1,13 +1,11 @@
 // Publisher.java
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
-import io.netty.util.CharsetUtil;
 
 public class Publisher {
     private static final String HOST = "localhost";
@@ -26,11 +24,9 @@ public class Publisher {
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2));
                             pipeline.addLast(new LengthFieldPrepender(2));
-                            pipeline.addLast(new StringDecoder(CharsetUtil.UTF_8));
-                            pipeline.addLast(new StringEncoder(CharsetUtil.UTF_8));
-                            pipeline.addLast(new SimpleChannelInboundHandler<String>() {
+                            pipeline.addLast(new SimpleChannelInboundHandler<Object>() {
                                 @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, String msg) {
+                                protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
                                     System.out.println("Received: " + msg);
                                 }
                             });

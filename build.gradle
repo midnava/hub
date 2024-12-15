@@ -19,6 +19,14 @@ subprojects {
 
     dependencies {
         implementation 'io.netty:netty-all:4.1.97.Final'
+
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+        testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.0.0-M4'
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     tasks.withType(JavaCompile) {
