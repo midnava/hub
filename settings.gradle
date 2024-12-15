@@ -1,0 +1,4 @@
+rootProject.name = 'hub'
+
+include('hub')
+include('subscriber')

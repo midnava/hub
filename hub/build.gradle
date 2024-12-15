@@ -1,0 +1,11 @@
+plugins {
+    id 'application'
+}
+
+application {
+    mainClass = 'Hub'
+}
+
+dependencies {
+    // Netty dependency is inherited from the parent (if applied)
+}
