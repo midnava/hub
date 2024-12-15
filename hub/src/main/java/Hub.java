@@ -11,6 +11,7 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Hub {
     private static final int PORT = 8080;
@@ -38,13 +39,16 @@ public class Hub {
 
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
-                                    System.out.println("Received: " + msg);
-//                                    if (msg.startsWith("SUBSCRIBE ")) {
-//                                        String topic = msg.substring(10);
-//                                        subscribers.computeIfAbsent(topic, k -> new ArrayList<>()).add(ctx.channel());
-//                                        ctx.writeAndFlush("Subscribed to " + topic);
-//                                        System.out.println("Subscriber added to topic: " + topic);
-//                                    } else {
+                                    HubMessage hubMessage = MessageHubAdapter.deserialize(msg);
+                                    System.out.println("Received: " + hubMessage);
+
+                                    if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {
+                                        String topic = hubMessage.getTopic();
+                                        subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(ctx.channel());
+                                        HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic");
+                                        ctx.writeAndFlush(MessageHubAdapter.serialize(response));
+                                        System.out.println("Subscriber added to topic: " + topic);
+                                    } else {
 //                                        String[] parts = msg.split(" ", 2);
 //                                        String topic = parts[0];
 //                                        String content = parts[1];
@@ -60,7 +64,7 @@ public class Hub {
 //                                        } else {
 //                                            System.out.println("No subscribers for topic: " + topic);
 //                                        }
-//                                    }
+                                    }
                                 }
 
                                 @Override

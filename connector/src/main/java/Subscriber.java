@@ -8,8 +8,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 
-import java.nio.charset.StandardCharsets;
-
 public class Subscriber {
     private static final String HOST = "localhost";
     private static final int PORT = 8080;
@@ -36,10 +34,11 @@ public class Subscriber {
                                 @Override
                                 public void channelActive(ChannelHandlerContext ctx) {
                                     System.out.println("Connected to server");
-                                    ByteBuf buffer = ch.alloc().buffer(1024);
-                                    buffer.writeCharSequence("SUBSCRIBE car", StandardCharsets.UTF_8);
 
-                                    ctx.writeAndFlush(buffer)
+                                    HubMessage hubMessage = new HubMessage(MessageType.SUBSCRIBE, "topic");
+                                    ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage);
+
+                                    ctx.writeAndFlush(byteBuf)
                                             .addListener(future -> {
                                                 if (future.isSuccess()) {
                                                     System.out.println("Subscription message sent");

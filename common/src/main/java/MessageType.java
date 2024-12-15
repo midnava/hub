@@ -2,6 +2,7 @@
 public enum MessageType {
     PUB_INIT(0),
     SUBSCRIBE(1),
+    SUBSCRIBE_RESPONSE(1),
     MESSAGE(2);
 
     private final byte id;
