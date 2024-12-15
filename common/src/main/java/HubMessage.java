@@ -21,10 +21,9 @@ public class HubMessage {
     public HubMessage(MessageType msgType, String topic, String msg) {
         this.msgType = msgType;
         this.topic = topic;
-        this.msgBytes = ByteBuffer.allocate(msg.length() + 4);
+        this.msgBytes = ByteBuffer.allocate(msg.length());
 
-        msgBytes.putInt(msg.length());
-        msgBytes.put(msg.getBytes(), 4, msg.length());
+        msgBytes.put(msg.getBytes(), 0, msg.length());
     }
 
     public MessageType getMsgType() {
