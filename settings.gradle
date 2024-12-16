@@ -3,4 +3,4 @@ rootProject.name = 'hub'
 include('hub')
 include('connector')
 include('common')
-//include('example')
+include('example')
