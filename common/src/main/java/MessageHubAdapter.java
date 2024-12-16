@@ -10,6 +10,10 @@ public class MessageHubAdapter {
     public static ByteBuf serialize(HubMessage msg) {
         ByteBuf byteBuf = new UnpooledHeapByteBuf(ByteBufAllocator.DEFAULT, 256, 2048);
 
+        return serialize(msg, byteBuf);
+    }
+
+    public static ByteBuf serialize(HubMessage msg, ByteBuf byteBuf) {
         byteBuf.writeByte(msg.getMsgType().getId());
         byteBuf.writeInt(msg.getTopic().length());
         byteBuf.writeCharSequence(msg.getTopic(), StandardCharsets.US_ASCII);

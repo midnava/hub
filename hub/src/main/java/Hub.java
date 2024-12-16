@@ -56,9 +56,10 @@ public class Hub {
                                         if (topicSubscribers != null) {
                                             for (Channel ch : topicSubscribers) {
                                                 if (ch.isActive()) {
-                                                    ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage);
+                                                    ByteBuf buffer = ctx.alloc().buffer();
+                                                    ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage, buffer);
                                                     ch.writeAndFlush(newMsg)
-                                                            .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                                                 }
                                             }
                                             System.out.println("Message sent to subscribers of topic: " + topic);
