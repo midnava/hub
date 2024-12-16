@@ -1,9 +1,10 @@
 
 public enum MessageType {
-    PUB_INIT(0),
-    SUBSCRIBE(1),
-    SUBSCRIBE_RESPONSE(2),
-    MESSAGE(3);
+    MESSAGE(1),
+    PUB_INIT(2),
+    SUBSCRIBE(3),
+    UNSUBSCRIBE(4),
+    SUBSCRIBE_RESPONSE(5);
 
     private final byte id;
 
@@ -19,7 +20,14 @@ public enum MessageType {
     }
 
     public static MessageType find(byte id) {
-        return types[id];
+        for (int i = 0; i < types.length; i++) {
+            MessageType type = types[i];
+            if (type.id == id) {
+                return type;
+            }
+        }
+
+        throw new RuntimeException("no enum for id " + id);
     }
 
     @Override

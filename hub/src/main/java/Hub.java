@@ -18,8 +18,8 @@ public class Hub {
     private static final Map<String, List<Channel>> subscribers = new HashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(3);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(3);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
 
         try {
             ServerBootstrap b = new ServerBootstrap();
@@ -39,7 +39,7 @@ public class Hub {
 
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
-                                    HubMessage hubMessage = MessageHubAdapter.deserializeHeader(msg); //todo only header
+                                    HubMessage hubMessage = MessageHubAdapter.deserialize(msg); //todo only header
 
 //                                    System.out.println("Received: " + hubMessage);
 
@@ -50,7 +50,7 @@ public class Hub {
                                         HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
                                         ctx.writeAndFlush(MessageHubAdapter.serialize(response));
                                         System.out.println("Subscriber added to topic: " + topic);
-                                    } else {
+                                    } else if (hubMessage.getMsgType() == MessageType.MESSAGE) {
                                         String topic = hubMessage.getTopic();
                                         List<Channel> topicSubscribers = subscribers.get(topic);
                                         if (topicSubscribers != null) {
@@ -67,6 +67,8 @@ public class Hub {
                                         } else {
                                             System.out.println("No subscribers for topic: " + topic);
                                         }
+                                    } else {
+                                        throw new IllegalArgumentException(hubMessage.toString());
                                     }
                                 }
 
