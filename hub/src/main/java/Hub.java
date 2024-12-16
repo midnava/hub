@@ -15,11 +15,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Hub {
     private static final int PORT = 8080;
-    private static final Map<String, List<Channel>> subscribers = new HashMap<>();
+    private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(1);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(4);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(4);
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
 
@@ -47,7 +47,8 @@ public class Hub {
 
                                     if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {
                                         String topic = hubMessage.getTopic();
-                                        subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(ctx.channel());
+                                        Channel channel = ctx.channel();
+                                        subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
 
                                         HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
                                         ByteBuf buffer = ch.alloc().buffer(512);
@@ -56,18 +57,18 @@ public class Hub {
                                         System.out.println("Subscriber added to topic: " + topic);
                                     } else if (hubMessage.getMsgType() == MessageType.MESSAGE) {
                                         String topic = hubMessage.getTopic();
-                                        List<Channel> topicSubscribers = subscribers.get(topic);
+                                        msg.resetReaderIndex();
+
+                                        List<SubscriberQueue> topicSubscribers = subscribers.get(topic);
                                         if (topicSubscribers != null) {
-                                            for (Channel ch : topicSubscribers) {
-                                                if (ch.isActive()) {
-                                                    msg.retain(); //increase pool counter
-                                                    msg.resetReaderIndex();
-                                                    ch.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+                                            for (SubscriberQueue queue : topicSubscribers) {
+                                                if (queue.isActive()) {
+                                                    queue.addMessage(msg);
                                                 }
                                             }
 //                                            System.out.println("Message sent to subscribers of topic: " + topic);
                                         } else {
-                                            System.out.println("No subscribers for topic: " + topic);
+//                                            System.out.println("No subscribers for topic: " + topic);
                                         }
                                     } else {
                                         throw new IllegalArgumentException(hubMessage.toString());
