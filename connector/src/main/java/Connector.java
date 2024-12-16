@@ -18,8 +18,9 @@ public class Connector {
     }
 
     public void start(String host, int port) throws InterruptedException {
-        Bootstrap b = new Bootstrap()
-                .group(group)
+        Bootstrap b = new Bootstrap();
+
+        b.group(group)
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<>() {
                     @Override
@@ -27,6 +28,7 @@ public class Connector {
                         ch.pipeline()
                                 .addLast(new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2))
                                 .addLast(new LengthFieldPrepender(2))
+                                .addLast(new ReconnectClientHandler(b, host, port))
                                 .addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                                     @Override
                                     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
@@ -53,18 +55,18 @@ public class Connector {
         System.out.println("Publisher is starting...");
     }
 
-    public void publish(HubMessage hubMessage) throws InterruptedException {
+    public void publish(HubMessage hubMessage) {
         ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage);
 
         ch.writeAndFlush(byteBuf);
     }
 
-    public void subscribe(String topic) throws InterruptedException {
+    public void subscribe(String topic) {
         HubMessage hubMessage = new HubMessage(MessageType.SUBSCRIBE, topic);
         publish(hubMessage);
     }
 
-    public void unsubscribe(String topic) throws InterruptedException {
+    public void unsubscribe(String topic) {
         HubMessage hubMessage = new HubMessage(MessageType.UNSUBSCRIBE, topic);
         publish(hubMessage);
     }
