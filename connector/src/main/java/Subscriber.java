@@ -13,7 +13,7 @@ public class Subscriber {
     private static final int PORT = 8080;
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = new NioEventLoopGroup(2);
 
         try {
             Bootstrap b = new Bootstrap();
@@ -29,7 +29,7 @@ public class Subscriber {
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
                                     HubMessage hubMessage = MessageHubAdapter.deserialize(msg);
-                                    System.out.println("Received message: " + hubMessage);
+//                                    System.out.println("Received message: " + hubMessage);
                                 }
 
                                 @Override

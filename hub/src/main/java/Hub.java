@@ -18,8 +18,8 @@ public class Hub {
     private static final Map<String, List<Channel>> subscribers = new HashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
 
         try {
             ServerBootstrap b = new ServerBootstrap();
@@ -38,10 +38,10 @@ public class Hub {
                                 }
 
                                 @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
+                                protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
                                     HubMessage hubMessage = MessageHubAdapter.deserialize(msg); //todo only header
 
-                                    System.out.println("Received: " + hubMessage);
+//                                    System.out.println("Received: " + hubMessage);
 
                                     if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {
                                         String topic = hubMessage.getTopic();
@@ -60,9 +60,10 @@ public class Hub {
                                                     ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage, buffer);
                                                     ch.writeAndFlush(newMsg)
                                                             .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+//                                                            .sync();
                                                 }
                                             }
-                                            System.out.println("Message sent to subscribers of topic: " + topic);
+//                                            System.out.println("Message sent to subscribers of topic: " + topic);
                                         } else {
                                             System.out.println("No subscribers for topic: " + topic);
                                         }

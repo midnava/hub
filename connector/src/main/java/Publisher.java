@@ -9,13 +9,14 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
 public class Publisher {
     private static final String HOST = "localhost";
     private static final int PORT = 8080;
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = new NioEventLoopGroup(2);
 
         try {
             Bootstrap b = new Bootstrap();
@@ -41,17 +42,43 @@ public class Publisher {
             Channel ch = b.connect(HOST, PORT).sync().channel();
             System.out.println("Connected to server");
 
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 50_000; i++) { //warmup
                 String message = "car message " + (i + 1);
                 byte[] bytes = message.getBytes();
 
                 HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", ByteBuffer.wrap(bytes));
                 ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage);
 
-                ch.writeAndFlush(byteBuf).sync();
-                System.out.println("Sent: " + message);
-                Thread.sleep(1000); // Slight delay between messages
+                ch.writeAndFlush(byteBuf);
+//                System.out.println("Sent: " + message);
+//                Thread.sleep(1000); // Slight delay between messages
+                if (i % 1000 == 0) {
+                    System.out.println("Sent: " + message);
+                }
             }
+
+            long startNano = System.nanoTime();
+            int count = 1_000_000;
+
+            for (int i = 0; i < count; i++) {
+                String message = "car message " + (i + 1);
+                byte[] bytes = message.getBytes();
+
+                HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", ByteBuffer.wrap(bytes));
+                ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage);
+
+                ch.writeAndFlush(byteBuf);
+//                System.out.println("Sent: " + message);
+//                Thread.sleep(1000); // Slight delay between messages
+                if (i % 25000 == 0) {
+                    System.out.println("Sent: " + message);
+                }
+            }
+
+            long endTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNano);
+            System.out.println("Done in " + endTime + " ms");
+            long rate = count / endTime * 1000;
+            System.out.println("msg rate is " + rate + " per second");
 
             ch.closeFuture().sync();
         } finally {
