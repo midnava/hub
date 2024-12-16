@@ -33,12 +33,13 @@ public class SubscriberQueue {
     }
 
     public void addMessage(ByteBuf msg) {
-        try {
-            msg.retain();
-            queue.put(msg);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        msg.retain();
+        handleMessage(msg);
+//        try {
+//            queue.put(msg);
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//        }
     }
 
     private void handleMessage(ByteBuf message) {

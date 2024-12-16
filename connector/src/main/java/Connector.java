@@ -58,7 +58,7 @@ public class Connector {
     }
 
     public void publish(HubMessage hubMessage) {
-        ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage, ch.alloc().buffer(512));
+        ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage, ch.alloc().buffer(hubMessage.getMsgBytesLength() + 128));
 
         ch.writeAndFlush(byteBuf);
     }
