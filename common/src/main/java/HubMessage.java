@@ -1,7 +1,7 @@
 import java.nio.ByteBuffer;
 
 public class HubMessage {
-    public static final ByteBuffer ZERO_BUFFER = ByteBuffer.allocate(1);
+    public static final ByteBuffer ZERO_BUFFER = ByteBuffer.allocate(0);
     private final MessageType msgType;
     private final String topic;
     private final ByteBuffer msgBytes; //text or message bytes

@@ -31,7 +31,5 @@ class MessageHubAdapterTest {
         for (int i = 0; i < bytes.length; i++) {
             assertEquals(bytes[i], msgBytes.get(i));
         }
-
     }
-
 }

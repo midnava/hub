@@ -39,32 +39,32 @@ public class Hub {
 
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
-                                    HubMessage hubMessage = MessageHubAdapter.deserialize(msg);
+                                    HubMessage hubMessage = MessageHubAdapter.deserialize(msg); //todo only header
 
                                     System.out.println("Received: " + hubMessage);
 
                                     if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {
                                         String topic = hubMessage.getTopic();
                                         subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(ctx.channel());
+
                                         HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
                                         ctx.writeAndFlush(MessageHubAdapter.serialize(response));
                                         System.out.println("Subscriber added to topic: " + topic);
                                     } else {
-//                                        String[] parts = msg.split(" ", 2);
-//                                        String topic = parts[0];
-//                                        String content = parts[1];
-//                                        List<Channel> topicSubscribers = subscribers.get(topic);
-//                                        if (topicSubscribers != null) {
-//                                            for (Channel ch : topicSubscribers) {
-//                                                if (ch.isActive()) {
-//                                                    ch.writeAndFlush(content)
-//                                                            .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-//                                                }
-//                                            }
-//                                            System.out.println("Message sent to subscribers of topic: " + topic);
-//                                        } else {
-//                                            System.out.println("No subscribers for topic: " + topic);
-//                                        }
+                                        String topic = hubMessage.getTopic();
+                                        List<Channel> topicSubscribers = subscribers.get(topic);
+                                        if (topicSubscribers != null) {
+                                            for (Channel ch : topicSubscribers) {
+                                                if (ch.isActive()) {
+                                                    ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage);
+                                                    ch.writeAndFlush(newMsg)
+                                                            .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                                                }
+                                            }
+                                            System.out.println("Message sent to subscribers of topic: " + topic);
+                                        } else {
+                                            System.out.println("No subscribers for topic: " + topic);
+                                        }
                                     }
                                 }
 
