@@ -39,7 +39,7 @@ public class Hub {
 
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
-                                    HubMessage hubMessage = MessageHubAdapter.deserialize(msg); //todo only header
+                                    HubMessage hubMessage = MessageHubAdapter.deserializeHeader(msg); //todo only header
 
 //                                    System.out.println("Received: " + hubMessage);
 
@@ -56,11 +56,11 @@ public class Hub {
                                         if (topicSubscribers != null) {
                                             for (Channel ch : topicSubscribers) {
                                                 if (ch.isActive()) {
-                                                    ByteBuf buffer = ctx.alloc().buffer();
+                                                    ByteBuf buffer = ctx.alloc().buffer(512, 2048);
                                                     ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage, buffer);
                                                     ch.writeAndFlush(newMsg)
-                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-//                                                            .sync();
+                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE)
+                                                            .sync();
                                                 }
                                             }
 //                                            System.out.println("Message sent to subscribers of topic: " + topic);

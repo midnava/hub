@@ -38,4 +38,13 @@ public class MessageHubAdapter {
 
         return new HubMessage(msgType, topic, buffer);
     }
+
+    public static HubMessage deserializeHeader(ByteBuf b) {
+
+        MessageType msgType = MessageType.find(b.readByte());
+        int topicLength = b.readInt();
+        String topic = b.readCharSequence(topicLength, StandardCharsets.US_ASCII).toString();
+
+        return new HubMessage(msgType, topic);
+    }
 }
