@@ -46,9 +46,9 @@ public class PublisherConnectorTest {
             }
         }
 
-        long endTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNano);
-        System.out.println("Done in " + endTime + " ms");
-        long rate = count / endTime * 1000;
+        long endTimeMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNano);
+        System.out.println("Done in " + endTimeMs + " ms");
+        long rate = count / endTimeMs;
         System.out.println("msg rate is " + rate + " per second");
 
 

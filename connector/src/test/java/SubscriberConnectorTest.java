@@ -14,7 +14,9 @@ public class SubscriberConnectorTest {
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             int rate = counter.getAndSet(0);
             totalCount.addAndGet(rate);
-            System.out.println("Msg rate is " + rate + " msg/sec, total=" + totalCount);
+            if (rate > 0) {
+                System.out.println("Msg rate is " + rate + " msg/sec, total=" + totalCount);
+            }
         }, 0, 1, TimeUnit.SECONDS);
 
         Connector subscriberConnector = new Connector(byteBuf -> {

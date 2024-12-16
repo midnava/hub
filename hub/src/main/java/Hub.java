@@ -12,14 +12,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Hub {
     private static final int PORT = 8080;
     private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
 
+
     public static void main(String[] args) throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(4);
         EventLoopGroup workerGroup = new NioEventLoopGroup(4);
+
+        AtomicInteger counter = new AtomicInteger();
+        AtomicLong totalCount = new AtomicLong();
+
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            int rate = counter.getAndSet(0);
+            totalCount.addAndGet(rate);
+            if (rate > 0) {
+                System.out.println("Msg rate is " + rate + " msg/sec, total=" + totalCount);
+            }
+        }, 0, 1, TimeUnit.SECONDS);
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
 
@@ -43,8 +61,6 @@ public class Hub {
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
                                     HubMessage hubMessage = MessageHubAdapter.deserializeHeader(msg); //todo only header
 
-//                                    System.out.println("Received: " + hubMessage);
-
                                     if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {
                                         String topic = hubMessage.getTopic();
                                         Channel channel = ctx.channel();
@@ -56,6 +72,7 @@ public class Hub {
                                         ctx.writeAndFlush(MessageHubAdapter.serialize(response, buffer));
                                         System.out.println("Subscriber added to topic: " + topic);
                                     } else if (hubMessage.getMsgType() == MessageType.MESSAGE) {
+                                        counter.incrementAndGet();
                                         String topic = hubMessage.getTopic();
                                         msg.resetReaderIndex();
 
