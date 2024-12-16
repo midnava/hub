@@ -15,6 +15,8 @@ public class Connector {
 
     public Connector(Consumer<ByteBuf> messageConsumer) {
         this.messageConsumer = messageConsumer;
+
+//        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
     }
 
     public void start(String host, int port) throws InterruptedException {

@@ -18,8 +18,10 @@ public class Hub {
     private static final Map<String, List<Channel>> subscribers = new HashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(1);
+
+//        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
 
         try {
             ServerBootstrap b = new ServerBootstrap();
@@ -48,7 +50,9 @@ public class Hub {
                                         subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(ctx.channel());
 
                                         HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
-                                        ctx.writeAndFlush(MessageHubAdapter.serialize(response, ch.alloc().buffer(512)));
+                                        ByteBuf buffer = ch.alloc().buffer(512);
+
+                                        ctx.writeAndFlush(MessageHubAdapter.serialize(response, buffer));
                                         System.out.println("Subscriber added to topic: " + topic);
                                     } else if (hubMessage.getMsgType() == MessageType.MESSAGE) {
                                         String topic = hubMessage.getTopic();
@@ -56,12 +60,9 @@ public class Hub {
                                         if (topicSubscribers != null) {
                                             for (Channel ch : topicSubscribers) {
                                                 if (ch.isActive()) {
-                                                    //clone it
-//                                                    ByteBuf buffer = ctx.alloc().buffer(512, 2048);
-//                                                    ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage, buffer);
-//                                                    ch.writeAndFlush(newMsg)
-//                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-//                                                            .sync();
+                                                    msg.retain(); //increase pool counter
+                                                    msg.resetReaderIndex();
+                                                    ch.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                                                 }
                                             }
 //                                            System.out.println("Message sent to subscribers of topic: " + topic);

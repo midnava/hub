@@ -26,7 +26,7 @@ public class MessageHubAdapter {
         String topic = b.readCharSequence(topicLength, StandardCharsets.US_ASCII).toString();
         int bufferLength = b.readInt();
 
-        UnsafeBuffer buffer = new UnsafeBuffer(b.nioBuffer(), b.arrayOffset(), b.readableBytes());
+        UnsafeBuffer buffer = new UnsafeBuffer(b.memoryAddress(), b.readableBytes()); //TODO IMPORTANT
 
         return new HubMessage(msgType, topic, buffer, bufferLength);
     }

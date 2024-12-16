@@ -1,11 +1,24 @@
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class SubscriberConnectorTest {
 
     public static void main(String[] args) throws InterruptedException {
+        AtomicInteger counter = new AtomicInteger();
+
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            int rate = counter.getAndSet(0);
+            System.out.println("Msg rate is " + rate + " msg/sec.");
+        }, 0, 1, TimeUnit.SECONDS);
+
         Connector subscriberConnector = new Connector(byteBuf -> {
-            HubMessage hubMessage = MessageHubAdapter.deserializeHeader(byteBuf);
+            HubMessage hubMessage = MessageHubAdapter.deserialize(byteBuf);
 
             if (hubMessage.getMsgType() == MessageType.MESSAGE) {
-
+                counter.incrementAndGet();
             } else {
                 System.out.println("Received msg: " + hubMessage);
             }
