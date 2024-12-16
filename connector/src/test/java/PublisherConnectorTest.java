@@ -1,3 +1,5 @@
+import org.agrona.concurrent.UnsafeBuffer;
+
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +23,7 @@ public class PublisherConnectorTest {
             String message = "car message " + (i + 1);
             byte[] bytes = message.getBytes();
 
-            HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", ByteBuffer.wrap(bytes));
+            HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
             publisherConnector.publish(hubMessage);
 
             if (i % 1000 == 0) {
@@ -30,16 +32,16 @@ public class PublisherConnectorTest {
         }
 
         long startNano = System.nanoTime();
-        int count = 1_000_000;
+        int count = 1_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
             String message = "car message " + (i + 1);
             byte[] bytes = message.getBytes();
 
-            HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", ByteBuffer.wrap(bytes));
+            HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
             publisherConnector.publish(hubMessage);
 
-            if (i % 25000 == 0) {
+            if (i % 50000 == 0) {
                 System.out.println("Sent: " + message);
             }
         }

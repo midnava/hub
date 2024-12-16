@@ -39,7 +39,7 @@ public class Hub {
 
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
-                                    HubMessage hubMessage = MessageHubAdapter.deserialize(msg); //todo only header
+                                    HubMessage hubMessage = MessageHubAdapter.deserializeHeader(msg); //todo only header
 
 //                                    System.out.println("Received: " + hubMessage);
 
@@ -48,7 +48,7 @@ public class Hub {
                                         subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(ctx.channel());
 
                                         HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
-                                        ctx.writeAndFlush(MessageHubAdapter.serialize(response));
+                                        ctx.writeAndFlush(MessageHubAdapter.serialize(response, ch.alloc().buffer(512)));
                                         System.out.println("Subscriber added to topic: " + topic);
                                     } else if (hubMessage.getMsgType() == MessageType.MESSAGE) {
                                         String topic = hubMessage.getTopic();
@@ -56,10 +56,11 @@ public class Hub {
                                         if (topicSubscribers != null) {
                                             for (Channel ch : topicSubscribers) {
                                                 if (ch.isActive()) {
-                                                    ByteBuf buffer = ctx.alloc().buffer(512, 2048);
-                                                    ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage, buffer);
-                                                    ch.writeAndFlush(newMsg)
-                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+                                                    //clone it
+//                                                    ByteBuf buffer = ctx.alloc().buffer(512, 2048);
+//                                                    ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage, buffer);
+//                                                    ch.writeAndFlush(newMsg)
+//                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 //                                                            .sync();
                                                 }
                                             }

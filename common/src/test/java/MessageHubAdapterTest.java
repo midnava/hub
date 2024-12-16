@@ -1,4 +1,7 @@
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.UnpooledHeapByteBuf;
+import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -16,20 +19,20 @@ class MessageHubAdapterTest {
         byte[] bytes = "Message".getBytes();
         buffer.put(bytes);
 
-        HubMessage hubMessage = new HubMessage(messageType, topic, buffer);
+        HubMessage hubMessage = new HubMessage(messageType, topic, new UnsafeBuffer(buffer), bytes.length);
 
-        ByteBuf serialized = MessageHubAdapter.serialize(hubMessage);
+        ByteBuf serialized = MessageHubAdapter.serialize(hubMessage, new UnpooledHeapByteBuf(ByteBufAllocator.DEFAULT, 512, 1024));
 
-        assertEquals(233, serialized.writableBytes());
+        assertEquals(23, serialized.readableBytes());
 
         HubMessage newMsgHub = MessageHubAdapter.deserialize(serialized);
 
         assertEquals(MessageType.MESSAGE, newMsgHub.getMsgType());
         assertEquals(topic, newMsgHub.getTopic());
 
-        ByteBuffer msgBytes = newMsgHub.getMsgBytes();
+        UnsafeBuffer msgBytes = newMsgHub.getMsgBytes();
         for (int i = 0; i < bytes.length; i++) {
-            assertEquals(bytes[i], msgBytes.get(i));
+            assertEquals(bytes[i], msgBytes.getByte(i));
         }
     }
 }
