@@ -13,7 +13,7 @@ public class Subscriber {
     private static final int PORT = 8080;
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup group = new NioEventLoopGroup(2);
+        EventLoopGroup group = new NioEventLoopGroup(1);
 
         try {
             Bootstrap b = new Bootstrap();

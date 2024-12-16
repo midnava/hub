@@ -16,7 +16,7 @@ public class Publisher {
     private static final int PORT = 8080;
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup group = new NioEventLoopGroup(2);
+        EventLoopGroup group = new NioEventLoopGroup(1);
 
         try {
             Bootstrap b = new Bootstrap();
@@ -50,6 +50,7 @@ public class Publisher {
                 ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage);
 
                 ch.writeAndFlush(byteBuf);
+                ;
 //                System.out.println("Sent: " + message);
 //                Thread.sleep(1000); // Slight delay between messages
                 if (i % 1000 == 0) {

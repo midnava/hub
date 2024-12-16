@@ -18,8 +18,8 @@ public class Hub {
     private static final Map<String, List<Channel>> subscribers = new HashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(3);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(3);
 
         try {
             ServerBootstrap b = new ServerBootstrap();
@@ -59,8 +59,8 @@ public class Hub {
                                                     ByteBuf buffer = ctx.alloc().buffer(512, 2048);
                                                     ByteBuf newMsg = MessageHubAdapter.serialize(hubMessage, buffer);
                                                     ch.writeAndFlush(newMsg)
-                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE)
-                                                            .sync();
+                                                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+//                                                            .sync();
                                                 }
                                             }
 //                                            System.out.println("Message sent to subscribers of topic: " + topic);
