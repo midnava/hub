@@ -20,7 +20,7 @@ public class HubV2 {
 
     public static void main(String[] args) throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(2);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(4);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
         ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
