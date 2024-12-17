@@ -1,48 +1,48 @@
+import common.HubMessage;
+import common.MessageType;
+import connector.Connector;
 import org.agrona.concurrent.UnsafeBuffer;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class PublisherConnectorTest {
 
     public static void main(String[] args) throws InterruptedException {
-        Connector publisherConnector = new Connector(byteBuf -> {
-            OldHubMessage oldHubMessage = MessageHubAdapter.deserializeHeader(byteBuf);
-
-            if (oldHubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
-
-            } else {
-                OldHubMessage fullOldHubMessage = MessageHubAdapter.deserialize(byteBuf);
-                System.out.println("Received msg: " + fullOldHubMessage);
+        Connector publisherConnector = new Connector(new Consumer<HubMessage>() {
+            @Override
+            public void accept(HubMessage message) {
+                System.out.println("Pub IN: " + message);
             }
         });
 
         publisherConnector.start("localhost", 8080);
 
-        for (int i = 0; i < 100_000; i++) { //warmup
-            String message = "car message " + (i + 1);
-            byte[] bytes = message.getBytes();
+        Thread.sleep(1000);
 
-            OldHubMessage oldHubMessage = new OldHubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
-            publisherConnector.publish(oldHubMessage);
+        int capacity = 256;
+        UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocate(capacity));
+        for (int i = 0; i < capacity; i++) {
+            buffer.putByte(i, (byte) i);
+        }
 
-            if (i % 1000 == 0) {
-                System.out.println("Sent: " + message);
-            }
+        UnsafeBuffer msgBytes = new UnsafeBuffer(ByteBuffer.allocate(128 * 1024));
+        int length = msgBytes.putStringAscii(0, "Hello Netty");
+
+        int warmUpCount = 100_000;
+        for (int i = 0; i < warmUpCount; i++) { //warmup
+            publisherConnector.publish(new HubMessage(MessageType.MESSAGE, "topic", i, msgBytes, 0, length));
         }
 
         long startNano = System.nanoTime();
-        int count = 15_000_000; //TODO FIX ME
+        int count = 50_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
-            String message = "car message " + (i + 1);
-            byte[] bytes = message.getBytes();
+            publisherConnector.publish(new HubMessage(MessageType.MESSAGE, "topic", i + warmUpCount, msgBytes, 0, length));
 
-            OldHubMessage oldHubMessage = new OldHubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
-            publisherConnector.publish(oldHubMessage);
-
-            if (i % 50000 == 0) {
-                System.out.println("Sent: " + message);
+            if (i % 1_000_000 == 0) {
+                System.out.println("Sent: " + i);
             }
         }
 

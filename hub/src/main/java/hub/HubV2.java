@@ -1,3 +1,6 @@
+package hub;
+
+import common.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
@@ -6,7 +9,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import v2.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -101,9 +103,9 @@ public class HubV2 {
                 }
 
 
-//                List<SubscriberQueue> topicSubscribers = subscribers.get(topic);
+//                List<hub.SubscriberQueue> topicSubscribers = subscribers.get(topic);
 //                if (topicSubscribers != null) {
-//                    for (SubscriberQueue queue : topicSubscribers) {
+//                    for (hub.SubscriberQueue queue : topicSubscribers) {
 //                        if (queue.isActive()) {
 //                            queue.addMessage(msg);
 //                        }

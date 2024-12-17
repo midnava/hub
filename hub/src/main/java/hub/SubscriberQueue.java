@@ -1,3 +1,5 @@
+package hub;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 

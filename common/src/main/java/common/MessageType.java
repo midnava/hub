@@ -1,4 +1,4 @@
-package v2;
+package common;
 
 public enum MessageType {
     MESSAGE(1),

@@ -1,3 +1,9 @@
+package connector;
+
+import common.HubMessage;
+import common.MessageConnectorDecoder;
+import common.MessageConnectorEncoder;
+import common.MessageRate;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
@@ -6,21 +12,17 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import v2.HubMessage;
-import v2.MessageConnectorDecoder;
-import v2.MessageConnectorEncoder;
-import v2.MessageRate;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
-public class ConnectorV2 {
+public class Connector {
     private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
     private final Consumer<HubMessage> messageConsumer;
 
-    public ConnectorV2(Consumer<HubMessage> messageConsumer) {
+    public Connector(Consumer<HubMessage> messageConsumer) {
         this.messageConsumer = messageConsumer;
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
