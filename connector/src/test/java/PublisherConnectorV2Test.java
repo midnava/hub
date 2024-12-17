@@ -26,15 +26,16 @@ public class PublisherConnectorV2Test {
             buffer.putByte(i, (byte) i);
         }
 
-        for (int i = 0; i < 100_000; i++) { //warmup
-            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", buffer, 0, capacity));
+        int warmUpCount = 100_000;
+        for (int i = 0; i < warmUpCount; i++) { //warmup
+            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i));
         }
 
         long startNano = System.nanoTime();
         int count = 50_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
-            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", buffer, 0, capacity));
+            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i + warmUpCount));
 
             if (i % 1_000_000 == 0) {
                 System.out.println("Sent: " + i);

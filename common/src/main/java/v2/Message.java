@@ -1,21 +1,19 @@
 package v2;
 
-import org.agrona.concurrent.UnsafeBuffer;
-
 // Message Model
 public class Message {
     private final MessageType messageType;
     private final String topic;
-    private final UnsafeBuffer byteBuf;
-    private final int offset;
-    private final int length;
+    private final long seqNo;
+//    private final UnsafeBuffer byteBuf;
+//    private final int offset;
+//    private final int length;
 
-    public Message(MessageType messageType, String topic, UnsafeBuffer byteBuf, int offset, int length) {
+
+    public Message(MessageType messageType, String topic, long seqNo) {
         this.messageType = messageType;
         this.topic = topic;
-        this.byteBuf = byteBuf;
-        this.offset = offset;
-        this.length = length;
+        this.seqNo = seqNo;
     }
 
     public MessageType getMessageType() {
@@ -26,16 +24,8 @@ public class Message {
         return topic;
     }
 
-    public UnsafeBuffer getByteBuf() {
-        return byteBuf;
-    }
-
-    public int getOffset() {
-        return offset;
-    }
-
-    public int getLength() {
-        return length;
+    public long getSeqNo() {
+        return seqNo;
     }
 
     @Override
@@ -43,9 +33,7 @@ public class Message {
         return "Message{" +
                 "messageType=" + messageType +
                 ", topic='" + topic + '\'' +
-                ", offset=" + offset +
-                ", length=" + length +
-                ", byteBuf=" + byteBuf +
+                ", seqNo=" + seqNo +
                 '}';
     }
 }
