@@ -108,6 +108,7 @@ class NettyClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast(new MessageDecoder(), new ServerHandler());
                         ch.pipeline().addLast(new MessageEncoder());
                         ch.config().setAllocator(allocator);
                     }
