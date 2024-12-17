@@ -25,13 +25,9 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
         String topic = new String(topicBytes, StandardCharsets.US_ASCII);
 
-        if (messageType == MessageType.MESSAGE) { //need just redirect
-            out.add(new NettyHubMessage(messageType, topic, seqNo, null, 0, 0));
-        } else {
-
-            UnsafeBuffer buffer = bufferThreadLocal.get();
-            int offset = in.readInt();
-            int bufferLength = in.readInt();
+        UnsafeBuffer buffer = bufferThreadLocal.get();
+        int offset = in.readInt();
+        int bufferLength = in.readInt();
 
 //        ByteBuffer byteBuffer = in.nioBuffer();
 //        if (byteBuffer.isDirect()) {
@@ -39,9 +35,9 @@ public class MessageDecoder extends ByteToMessageDecoder {
 //            buffer.wrap(address, bufferLength); //IMPORTANT
 //            in.skipBytes(bufferLength);
 //        } else {
-            in.readBytes(buffer.byteBuffer().array(), 0, bufferLength);
+        in.readBytes(buffer.byteBuffer().array(), 0, bufferLength);
 //        }
-            out.add(new NettyHubMessage(messageType, topic, seqNo, buffer, offset, bufferLength));
-        }
+        out.add(new NettyHubMessage(messageType, topic, seqNo, buffer, offset, bufferLength));
+
     }
 }

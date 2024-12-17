@@ -94,8 +94,13 @@ public class HubV2 {
                 MessageRate.instance.incrementServerPubMsgRate();
                 System.out.println("Subscriber added to topic: " + topic);
             } else if (messageType == MessageType.MESSAGE) {
-//                MessageRate.instance.incrementSubMsgRate();
-//
+                MessageRate.instance.incrementSubMsgRate();
+
+                if (seqNo % 1_000_000 == 0) {
+                    System.out.println("MSG " + seqNo + ": " + msg.getByteBuf().getStringAscii(0));
+                }
+
+
 //                List<SubscriberQueue> topicSubscribers = subscribers.get(topic);
 //                if (topicSubscribers != null) {
 //                    for (SubscriberQueue queue : topicSubscribers) {
