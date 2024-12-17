@@ -59,7 +59,7 @@ public class HubV2 {
             // Simulate processing
             MessageRate.instance.incrementServerSubMsgRate();
             if (msg.seqNo % 1_000_000 == 0) {
-                System.out.println("Received message: " + msg.seqNo);
+                System.out.println("Received message '" + msg.getTopic() + "' : " + msg.seqNo);
             }
         }
 
