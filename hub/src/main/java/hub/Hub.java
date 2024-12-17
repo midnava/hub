@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class HubV2 {
+public class Hub {
     private static final int port = 8080;
     private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
 
