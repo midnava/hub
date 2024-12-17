@@ -22,7 +22,7 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
         out.writeInt(msg.getOffset());
         out.writeInt(length);
 
-        //out.writeBytes(unsafeBuffer.byteBuffer().array(), 0, length);
+        out.writeBytes(unsafeBuffer.byteBuffer().array(), 0, length);
     }
 }
 
