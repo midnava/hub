@@ -4,6 +4,8 @@ import org.agrona.concurrent.UnsafeBuffer;
 
 // Message Model
 public class Message {
+    private static final byte[] EMPTY_BUFFER = new byte[0];
+
     private final MessageType messageType;
     private final String topic;
     private final long seqNo;
@@ -19,6 +21,10 @@ public class Message {
         this.byteBuf = byteBuf;
         this.offset = offset;
         this.buffLength = buffLength;
+    }
+
+    public void cleanupBuffer() {
+        byteBuf.wrap(EMPTY_BUFFER);
     }
 
     public MessageType getMessageType() {

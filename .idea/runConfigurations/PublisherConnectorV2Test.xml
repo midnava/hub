@@ -2,6 +2,7 @@
   <configuration default="false" name="PublisherConnectorV2Test" type="Application" factoryName="Application" singleton="false" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="PublisherConnectorV2Test" />
     <module name="hub.connector.test" />
+    <option name="VM_PARAMETERS" value="--add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

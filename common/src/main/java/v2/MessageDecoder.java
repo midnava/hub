@@ -29,10 +29,14 @@ public class MessageDecoder extends ByteToMessageDecoder {
         int offset = in.readInt();
         int bufferLength = in.readInt();
 
-//        buffer.wrap(in.memoryAddress(), in.readableBytes()); //IMPORTANT
-//        in.skipBytes(bufferLength);
-
+//        ByteBuffer byteBuffer = in.nioBuffer();
+//        if (byteBuffer.isDirect()) {
+//            long address = ByteBufferAddressHelper.getAddress(byteBuffer);
+//            buffer.wrap(address, bufferLength); //IMPORTANT
+//            in.skipBytes(bufferLength);
+//        } else {
         in.readBytes(buffer.byteBuffer().array(), 0, bufferLength);
+//        }
 
         out.add(new Message(messageType, topic, seqNo, buffer, offset, bufferLength));
     }
