@@ -19,12 +19,7 @@ public class PublisherConnectorV2Test {
         publisherConnector.start("localhost", 8080);
 
         for (int i = 0; i < 100_000; i++) { //warmup
-
             publisherConnector.publish(new Message("topic", i));
-
-            if (i % 1000 == 0) {
-                System.out.println("Sent: " + i);
-            }
         }
 
         long startNano = System.nanoTime();
@@ -33,7 +28,7 @@ public class PublisherConnectorV2Test {
         for (int i = 0; i < count; i++) {
             publisherConnector.publish(new Message("topic", i));
 
-            if (i % 1000 == 0) {
+            if (i % 1_000_000 == 0) {
                 System.out.println("Sent: " + i);
             }
         }

@@ -20,7 +20,9 @@ public class MessageRate {
                 Date date = new Date();
 
                 int pubRate = pubMsgRate.getAndSet(0);
-                System.out.println(date + ": pubMsgRate is " + pubRate);
+                if (pubRate > 0) {
+                    System.out.println(date + ": pubMsgRate is " + pubRate);
+                }
 
                 int subMsg = subMsgRate.getAndSet(0);
                 if (subMsg > 0) {
