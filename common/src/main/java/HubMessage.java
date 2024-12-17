@@ -5,33 +5,33 @@ import java.nio.ByteBuffer;
 public class HubMessage {
     public static final UnsafeBuffer ZERO_BUFFER = new UnsafeBuffer(ByteBuffer.allocate(0));
 
-    private final MessageType msgType;
+    private final MessageTypeOld msgType;
     private final String topic;
     private final UnsafeBuffer msgBytes; //text or message bytes
     private final int msgBytesLength;
 
-    public HubMessage(MessageType msgType, String topic, UnsafeBuffer msgBytes, int msgBytesLength) {
+    public HubMessage(MessageTypeOld msgType, String topic, UnsafeBuffer msgBytes, int msgBytesLength) {
         this.msgType = msgType;
         this.topic = topic;
         this.msgBytes = msgBytes;
         this.msgBytesLength = msgBytesLength;
     }
 
-    public HubMessage(MessageType msgType, String topic) {
+    public HubMessage(MessageTypeOld msgType, String topic) {
         this.msgType = msgType;
         this.topic = topic;
         this.msgBytes = ZERO_BUFFER;
         this.msgBytesLength = 0;
     }
 
-    public HubMessage(MessageType msgType, String topic, String msg) {
+    public HubMessage(MessageTypeOld msgType, String topic, String msg) {
         this.msgType = msgType;
         this.topic = topic;
         this.msgBytes = new UnsafeBuffer(ByteBuffer.allocate(msg.length() + 4));
         this.msgBytesLength = msgBytes.putStringAscii(0, msg);
     }
 
-    public MessageType getMsgType() {
+    public MessageTypeOld getMsgType() {
         return msgType;
     }
 
@@ -55,7 +55,7 @@ public class HubMessage {
                 .append(", topic=").append(topic)
                 .append(", msgBytesLength=").append(msgBytesLength);
 
-        if (msgType != MessageType.MESSAGE) {
+        if (msgType != MessageTypeOld.MESSAGE) {
             builder.append(", msgBytes=")
 //                    .append(msgBytes.getStringAscii(0))
                     .append('}');

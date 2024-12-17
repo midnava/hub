@@ -2,8 +2,10 @@ package v2;
 
 import org.agrona.concurrent.UnsafeBuffer;
 
+import java.nio.ByteBuffer;
+
 // Message Model
-public class Message {
+public class NettyHubMessage {
     private static final byte[] EMPTY_BUFFER = new byte[0];
 
     private final MessageType messageType;
@@ -14,13 +16,26 @@ public class Message {
     private final int buffLength;
 
 
-    public Message(MessageType messageType, String topic, long seqNo, UnsafeBuffer byteBuf, int offset, int buffLength) {
+    public NettyHubMessage(MessageType messageType, String topic, long seqNo, UnsafeBuffer byteBuf, int offset, int buffLength) {
         this.messageType = messageType;
         this.topic = topic;
         this.seqNo = seqNo;
         this.byteBuf = byteBuf;
         this.offset = offset;
         this.buffLength = buffLength;
+    }
+
+    public NettyHubMessage(MessageType messageType, String topic, long seqNo, String msg) {
+        this.messageType = messageType;
+        this.topic = topic;
+        this.seqNo = seqNo;
+
+        UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocate(msg.length() + 4));
+        int length = buffer.putStringAscii(0, msg);
+
+        this.byteBuf = buffer;
+        this.offset = 0;
+        this.buffLength = length;
     }
 
     public void cleanupBuffer() {

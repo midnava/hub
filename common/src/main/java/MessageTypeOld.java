@@ -1,5 +1,5 @@
 
-public enum MessageType {
+public enum MessageTypeOld {
     MESSAGE(1),
     PUB_INIT(2),
     SUBSCRIBE(3),
@@ -8,10 +8,10 @@ public enum MessageType {
 
     private final byte id;
 
-    private final static MessageType[] types = MessageType.values();
+    private final static MessageTypeOld[] types = MessageTypeOld.values();
 
 
-    MessageType(int id) {
+    MessageTypeOld(int id) {
         this.id = (byte) id;
     }
 
@@ -19,9 +19,9 @@ public enum MessageType {
         return id;
     }
 
-    public static MessageType find(byte id) {
+    public static MessageTypeOld find(byte id) {
         for (int i = 0; i < types.length; i++) {
-            MessageType type = types[i];
+            MessageTypeOld type = types[i];
             if (type.id == id) {
                 return type;
             }

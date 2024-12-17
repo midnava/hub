@@ -22,7 +22,7 @@ public class SubscriberConnectorTest {
         Connector subscriberConnector = new Connector(byteBuf -> {
             HubMessage hubMessage = MessageHubAdapter.deserialize(byteBuf);
 
-            if (hubMessage.getMsgType() == MessageType.MESSAGE) {
+            if (hubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
                 counter.incrementAndGet();
             } else {
                 System.out.println("Received msg: " + hubMessage);

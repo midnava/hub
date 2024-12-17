@@ -9,7 +9,7 @@ public class PublisherConnectorTest {
         Connector publisherConnector = new Connector(byteBuf -> {
             HubMessage hubMessage = MessageHubAdapter.deserializeHeader(byteBuf);
 
-            if (hubMessage.getMsgType() == MessageType.MESSAGE) {
+            if (hubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
 
             } else {
                 HubMessage fullHubMessage = MessageHubAdapter.deserialize(byteBuf);
@@ -23,7 +23,7 @@ public class PublisherConnectorTest {
             String message = "car message " + (i + 1);
             byte[] bytes = message.getBytes();
 
-            HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
+            HubMessage hubMessage = new HubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
             publisherConnector.publish(hubMessage);
 
             if (i % 1000 == 0) {
@@ -38,7 +38,7 @@ public class PublisherConnectorTest {
             String message = "car message " + (i + 1);
             byte[] bytes = message.getBytes();
 
-            HubMessage hubMessage = new HubMessage(MessageType.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
+            HubMessage hubMessage = new HubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
             publisherConnector.publish(hubMessage);
 
             if (i % 50000 == 0) {

@@ -68,12 +68,12 @@ public class Connector {
     }
 
     public void subscribe(String topic) throws InterruptedException {
-        HubMessage hubMessage = new HubMessage(MessageType.SUBSCRIBE, topic);
+        HubMessage hubMessage = new HubMessage(MessageTypeOld.SUBSCRIBE, topic);
         publish(hubMessage);
     }
 
     public void unsubscribe(String topic) throws InterruptedException {
-        HubMessage hubMessage = new HubMessage(MessageType.UNSUBSCRIBE, topic);
+        HubMessage hubMessage = new HubMessage(MessageTypeOld.UNSUBSCRIBE, topic);
         publish(hubMessage);
     }
 

@@ -6,14 +6,13 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import v2.Message;
-import v2.MessageDecoder;
-import v2.MessageEncoder;
-import v2.MessageRate;
+import v2.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class HubV2 {
     private static final int port = 8080;
@@ -64,30 +63,54 @@ public class HubV2 {
         }
     }
 
-    private static class ServerHandler extends SimpleChannelInboundHandler<Message> {
+    private static class ServerHandler extends SimpleChannelInboundHandler<NettyHubMessage> {
         private volatile long currentIndex = -1;
+        private final AtomicLong globalSeqNo = new AtomicLong();
 
         public ServerHandler(SocketChannel ch) {
             System.out.println("Created: " + ch.metadata().toString());
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
-            // Simulate processing
+        protected void channelRead0(ChannelHandlerContext ctx, NettyHubMessage msg) {
             MessageRate.instance.incrementServerSubMsgRate();
             long seqNo = msg.getSeqNo();
 
             if (currentIndex > 0 && currentIndex + 1 != seqNo) {
                 System.out.println("Error: " + currentIndex + " vs " + seqNo);
             }
-
-            if (seqNo % 1_000_000 == 0) {
-                System.out.println("Received message '" + msg.getTopic() + "' : " + msg.getSeqNo() + " --- "
-                        + msg.getByteBuf().getStringAscii(0)
-                );
-            }
-
             currentIndex = seqNo;
+
+            String topic = msg.getTopic();
+            MessageType messageType = msg.getMessageType();
+
+            if (messageType == MessageType.SUBSCRIBE) {
+                Channel channel = ctx.channel();
+                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
+
+                NettyHubMessage response = new NettyHubMessage(MessageType.SUBSCRIBE, "topic", globalSeqNo.incrementAndGet(), "subscribed on " + topic);
+                ctx.writeAndFlush(response);
+
+                MessageRate.instance.incrementServerPubMsgRate();
+                System.out.println("Subscriber added to topic: " + topic);
+            } else if (messageType == MessageType.MESSAGE) {
+//                MessageRate.instance.incrementSubMsgRate();
+//
+//                List<SubscriberQueue> topicSubscribers = subscribers.get(topic);
+//                if (topicSubscribers != null) {
+//                    for (SubscriberQueue queue : topicSubscribers) {
+//                        if (queue.isActive()) {
+//                            queue.addMessage(msg);
+//                        }
+//                    }
+////                                            System.out.println("Message sent to subscribers of topic: " + topic);
+//                } else {
+////                                            System.out.println("No subscribers for topic: " + topic);
+//                }
+//            } else {
+//                throw new IllegalArgumentException(hubMessage.toString());
+//            }
+            }
         }
 
         @Override

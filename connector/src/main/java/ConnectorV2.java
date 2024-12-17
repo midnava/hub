@@ -6,10 +6,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import v2.Message;
 import v2.MessageDecoder;
 import v2.MessageEncoder;
 import v2.MessageRate;
+import v2.NettyHubMessage;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -18,9 +18,9 @@ import java.util.function.Consumer;
 public class ConnectorV2 {
     private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
-    private final Consumer<Message> messageConsumer;
+    private final Consumer<NettyHubMessage> messageConsumer;
 
-    public ConnectorV2(Consumer<Message> messageConsumer) {
+    public ConnectorV2(Consumer<NettyHubMessage> messageConsumer) {
         this.messageConsumer = messageConsumer;
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
@@ -62,12 +62,12 @@ public class ConnectorV2 {
         System.out.println("Publisher is starting...");
     }
 
-    public void publish(Message message) {
+    public void publish(NettyHubMessage nettyHubMessage) {
         if (channel != null && channel.isActive()) {
             while (!channel.isWritable()) {
                 LockSupport.parkNanos(TimeUnit.MICROSECONDS.toNanos(500));
             }
-            channel.write(message);
+            channel.write(nettyHubMessage);
             MessageRate.instance.incrementPubMsgRate();
         } else {
             //throw new IllegalArgumentException("Transport is not ready");
@@ -93,9 +93,9 @@ public class ConnectorV2 {
         }
     }
 
-    private class ClientHandler extends SimpleChannelInboundHandler<Message> {
+    private class ClientHandler extends SimpleChannelInboundHandler<NettyHubMessage> {
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
+        protected void channelRead0(ChannelHandlerContext ctx, NettyHubMessage msg) {
             // Simulate processing
             MessageRate.instance.incrementSubMsgRate();
             messageConsumer.accept(msg);

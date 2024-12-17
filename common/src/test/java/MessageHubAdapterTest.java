@@ -13,13 +13,13 @@ class MessageHubAdapterTest {
 
     @Test
     void serialize() {
-        MessageType messageType = MessageType.MESSAGE;
+        MessageTypeOld messageTypeOld = MessageTypeOld.MESSAGE;
         String topic = "MyTopic";
         ByteBuffer buffer = ByteBuffer.allocate(128);
         byte[] bytes = "Message".getBytes();
         buffer.put(bytes);
 
-        HubMessage hubMessage = new HubMessage(messageType, topic, new UnsafeBuffer(buffer), bytes.length);
+        HubMessage hubMessage = new HubMessage(messageTypeOld, topic, new UnsafeBuffer(buffer), bytes.length);
 
         ByteBuf serialized = MessageHubAdapter.serialize(hubMessage, new UnpooledHeapByteBuf(ByteBufAllocator.DEFAULT, 512, 1024));
 
@@ -27,7 +27,7 @@ class MessageHubAdapterTest {
 
         HubMessage newMsgHub = MessageHubAdapter.deserialize(serialized);
 
-        assertEquals(MessageType.MESSAGE, newMsgHub.getMsgType());
+        assertEquals(MessageTypeOld.MESSAGE, newMsgHub.getMsgType());
         assertEquals(topic, newMsgHub.getTopic());
 
         UnsafeBuffer msgBytes = newMsgHub.getMsgBytes();

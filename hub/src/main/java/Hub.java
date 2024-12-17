@@ -66,17 +66,17 @@ public class Hub {
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
                                     HubMessage hubMessage = MessageHubAdapter.deserializeHeader(msg); //todo only header
 
-                                    if (hubMessage.getMsgType() == MessageType.SUBSCRIBE) {
+                                    if (hubMessage.getMsgType() == MessageTypeOld.SUBSCRIBE) {
                                         String topic = hubMessage.getTopic();
                                         Channel channel = ctx.channel();
                                         subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
 
-                                        HubMessage response = new HubMessage(MessageType.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
+                                        HubMessage response = new HubMessage(MessageTypeOld.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
                                         ByteBuf buffer = ch.alloc().buffer(512);
 
                                         ctx.writeAndFlush(MessageHubAdapter.serialize(response, buffer));
                                         System.out.println("Subscriber added to topic: " + topic);
-                                    } else if (hubMessage.getMsgType() == MessageType.MESSAGE) {
+                                    } else if (hubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
                                         counter.incrementAndGet();
                                         String topic = hubMessage.getTopic();
                                         msg.resetReaderIndex();

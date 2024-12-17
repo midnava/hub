@@ -21,7 +21,7 @@ public class MessageHubAdapter {
 
     public static HubMessage deserialize(ByteBuf b) {
 
-        MessageType msgType = MessageType.find(b.readByte());
+        MessageTypeOld msgType = MessageTypeOld.find(b.readByte());
         int topicLength = b.readInt();
         String topic = b.readCharSequence(topicLength, StandardCharsets.US_ASCII).toString();
         int bufferLength = b.readInt();
@@ -33,7 +33,7 @@ public class MessageHubAdapter {
 
     public static HubMessage deserializeHeader(ByteBuf b) {
 
-        MessageType msgType = MessageType.find(b.readByte());
+        MessageTypeOld msgType = MessageTypeOld.find(b.readByte());
         int topicLength = b.readInt();
         String topic = b.readCharSequence(topicLength, StandardCharsets.US_ASCII).toString();
 
