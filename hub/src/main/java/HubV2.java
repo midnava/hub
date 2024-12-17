@@ -56,10 +56,23 @@ public class HubV2 {
     }
 
     private static class ServerHandler extends SimpleChannelInboundHandler<Message> {
+        private volatile long currentIndex = -1;
+
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
             // Simulate processing
             MessageRate.instance.incrementServerSubMsgRate();
+            long seqNo = msg.getSeqNo();
+
+            if (currentIndex > 0 && currentIndex + 1 != seqNo) {
+                System.out.println("Error: " + currentIndex + " vs " + seqNo);
+            }
+
+            if (seqNo % 1_000_000 == 0) {
+                System.out.println("Received message '" + msg.getTopic() + "' : " + msg.getSeqNo());
+            }
+
+            currentIndex = seqNo;
         }
 
         @Override
