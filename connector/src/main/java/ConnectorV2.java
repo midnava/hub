@@ -1,5 +1,4 @@
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.*;
@@ -18,9 +17,9 @@ import java.util.function.Consumer;
 public class ConnectorV2 {
     private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
-    private final Consumer<ByteBuf> messageConsumer;
+    private final Consumer<Message> messageConsumer;
 
-    public ConnectorV2(Consumer<ByteBuf> messageConsumer) {
+    public ConnectorV2(Consumer<Message> messageConsumer) {
         this.messageConsumer = messageConsumer;
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
@@ -63,7 +62,7 @@ public class ConnectorV2 {
             channel.write(message);
             MessageRate.instance.incrementPubMsgRate();
         } else {
-            throw new IllegalArgumentException("Transport is not ready");
+            //throw new IllegalArgumentException("Transport is not ready");
         }
     }
 
@@ -86,14 +85,12 @@ public class ConnectorV2 {
         }
     }
 
-    private static class ClientHandler extends SimpleChannelInboundHandler<Message> {
+    private class ClientHandler extends SimpleChannelInboundHandler<Message> {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
             // Simulate processing
             MessageRate.instance.incrementSubMsgRate();
-            if (msg.seqNo % 1_000_000 == 0) {
-                System.out.println("Received message: " + msg.seqNo);
-            }
+            messageConsumer.accept(msg);
         }
 
         @Override

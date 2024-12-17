@@ -1,32 +1,41 @@
+import org.agrona.concurrent.UnsafeBuffer;
 import v2.Message;
+import v2.MessageType;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class PublisherConnectorV2Test {
 
     public static void main(String[] args) throws InterruptedException {
-        ConnectorV2 publisherConnector = new ConnectorV2(byteBuf -> {
-            HubMessage hubMessage = MessageHubAdapter.deserializeHeader(byteBuf);
-
-            if (hubMessage.getMsgType() == MessageType.MESSAGE) {
-
-            } else {
-                HubMessage fullHubMessage = MessageHubAdapter.deserialize(byteBuf);
-                System.out.println("Received msg: " + fullHubMessage);
+        ConnectorV2 publisherConnector = new ConnectorV2(new Consumer<Message>() {
+            @Override
+            public void accept(Message message) {
+                System.out.println("Pub IN: " + message);
             }
         });
 
         publisherConnector.start("localhost", 8080);
 
-        for (int i = 0; i < 100_000; i++) { //warmup
-            publisherConnector.publish(new Message("topic", i));
+        Thread.sleep(1000);
+
+        int capacity = 256;
+        UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocate(capacity));
+        for (int i = 0; i < capacity; i++) {
+            buffer.putByte(i, (byte) i);
+        }
+
+        int warmUpCount = 100_000;
+        for (int i = 0; i < warmUpCount; i++) { //warmup
+            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i));
         }
 
         long startNano = System.nanoTime();
         int count = 50_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
-            publisherConnector.publish(new Message("topic", i));
+            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i + warmUpCount));
 
             if (i % 1_000_000 == 0) {
                 System.out.println("Sent: " + i);
