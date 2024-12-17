@@ -23,7 +23,7 @@ public class PublisherConnectorV2Test {
         }
 
         long startNano = System.nanoTime();
-        int count = 15_000_000; //TODO FIX ME
+        int count = 50_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
             publisherConnector.publish(new Message("topic", i));
