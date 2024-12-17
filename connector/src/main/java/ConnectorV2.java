@@ -62,6 +62,8 @@ public class ConnectorV2 {
             }
             channel.write(message);
             MessageRate.instance.incrementPubMsgRate();
+        } else {
+            throw new IllegalArgumentException("Transport is not ready");
         }
     }
 
