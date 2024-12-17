@@ -1,7 +1,9 @@
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -12,7 +14,6 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +30,7 @@ class NettyServer {
     public void start() throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(2);
         EventLoopGroup workerGroup = new NioEventLoopGroup(4);
+        ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
 
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
@@ -45,6 +47,7 @@ class NettyServer {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(new MessageDecoder(), new ServerHandler());
+                            ch.config().setAllocator(allocator);
                         }
                     })
                     .validate();
@@ -92,6 +95,8 @@ class NettyClient {
     public void connect() throws InterruptedException {
         group = new NioEventLoopGroup(1);
         Bootstrap bootstrap = new Bootstrap();
+        ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
+
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_RCVBUF, 2 * 1024 * 1024)
@@ -104,19 +109,21 @@ class NettyClient {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new MessageEncoder());
+                        ch.config().setAllocator(allocator);
                     }
                 })
                 .validate();
 
         ChannelFuture future = bootstrap.connect(host, port).sync();
         channel = future.channel();
+        channel.eventLoop().scheduleAtFixedRate(() -> channel.flush(), 1, 1, TimeUnit.MILLISECONDS);
 
-        flushScheduler = Executors.newSingleThreadScheduledExecutor();
-        flushScheduler.scheduleAtFixedRate(() -> {
-            if (channel != null && channel.isActive()) {
-                channel.flush();
-            }
-        }, 1, 1, TimeUnit.MILLISECONDS);
+//        flushScheduler = Executors.newSingleThreadScheduledExecutor();
+//        flushScheduler.scheduleAtFixedRate(() -> {
+//            if (channel != null && channel.isActive()) {
+//                channel.flush();
+//            }
+//        }, 1, 1, TimeUnit.MILLISECONDS);
     }
 
     public void publish(Message message) {
