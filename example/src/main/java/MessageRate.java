@@ -1,3 +1,4 @@
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,24 +15,24 @@ public class MessageRate {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
+                Date date = new Date();
+
                 int pubRate = pubMsgRate.getAndSet(0);
-                if (pubRate > 0) {
-                    System.out.println("pubMsgRate is " + pubRate);
-                }
+                System.out.println(date + ": pubMsgRate is " + pubRate);
 
                 int subMsg = subMsgRate.getAndSet(0);
                 if (subMsg > 0) {
-                    System.out.println("subMsgRate is " + subMsg);
+                    System.out.println(date + ": subMsgRate is " + subMsg);
                 }
 
                 int serverPubMsg = serverPubMsgRate.getAndSet(0);
                 if (serverPubMsg > 0) {
-                    System.out.println("serverPubMsgRate is " + serverPubMsg);
+                    System.out.println(date + ": serverPubMsgRate is " + serverPubMsg);
                 }
 
                 int serverSubMsg = serverSubMsgRate.getAndSet(0);
                 if (serverSubMsg > 0) {
-                    System.out.println("serverSubMsgRate is " + serverSubMsg);
+                    System.out.println(date + ": serverSubMsgRate is " + serverSubMsg);
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);

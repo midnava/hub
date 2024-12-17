@@ -27,8 +27,9 @@ class NettyServer {
     }
 
     public void start() throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
+        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(4);
+
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(bossGroup, workerGroup)
@@ -89,7 +90,7 @@ class NettyClient {
     }
 
     public void connect() throws InterruptedException {
-        group = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
+        group = new NioEventLoopGroup(1);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
