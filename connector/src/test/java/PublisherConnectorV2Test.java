@@ -26,16 +26,19 @@ public class PublisherConnectorV2Test {
             buffer.putByte(i, (byte) i);
         }
 
+        UnsafeBuffer msgBytes = new UnsafeBuffer(ByteBuffer.allocate(128 * 1024));
+        int length = msgBytes.putStringAscii(0, "Hello Netty");
+
         int warmUpCount = 100_000;
         for (int i = 0; i < warmUpCount; i++) { //warmup
-            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i));
+            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i, msgBytes, 0, length));
         }
 
         long startNano = System.nanoTime();
         int count = 50_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
-            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i + warmUpCount));
+            publisherConnector.publish(new Message(MessageType.MESSAGE, "topic", i + warmUpCount, msgBytes, 0, length));
 
             if (i % 1_000_000 == 0) {
                 System.out.println("Sent: " + i);

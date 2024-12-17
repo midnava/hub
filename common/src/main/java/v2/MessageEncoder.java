@@ -9,17 +9,27 @@ import java.nio.charset.StandardCharsets;
 public class MessageEncoder extends MessageToByteEncoder<Message> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) {
-        byte[] topicBytes = msg.getTopic().getBytes(StandardCharsets.UTF_8);
+        byte[] topicBytes = msg.getTopic().getBytes(StandardCharsets.US_ASCII);
         int topicLength = topicBytes.length;
+        int offset = msg.getOffset();
+        int buffLength = msg.getBuffLength();
 
-        int messageLength = 1 + 8 + 4 + topicLength; // msgType + seqNo + topicLength + topicBytes
+        // msgType + seqNo + topicLength + topicBytes + offset + buffLength + buffer
+        int messageLength = 1 + 8 + 4 + topicLength + 4 + 4 + buffLength;
 
+        //total
         out.writeInt(messageLength);
+
         out.writeByte(msg.getMessageType().getId());
         out.writeLong(msg.getSeqNo());
-
+        //string
         out.writeInt(topicLength);
         out.writeBytes(topicBytes);
+
+        //buffer
+        out.writeInt(offset);
+        out.writeInt(buffLength);
+        out.writeBytes(msg.getByteBuf().byteBuffer().array(), 0, buffLength);
     }
 }
 

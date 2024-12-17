@@ -82,7 +82,9 @@ public class HubV2 {
             }
 
             if (seqNo % 1_000_000 == 0) {
-                System.out.println("Received message '" + msg.getTopic() + "' : " + msg.getSeqNo());
+                System.out.println("Received message '" + msg.getTopic() + "' : " + msg.getSeqNo() + " --- "
+                        + msg.getByteBuf().getStringAscii(0)
+                );
             }
 
             currentIndex = seqNo;
