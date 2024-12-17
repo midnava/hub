@@ -7,26 +7,20 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-// Message Decoder
 public class MessageDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        if (in.readableBytes() < 8) {
-            return;
-        }
+        MessageType messageType = MessageType.find(in.readByte());
 
-        in.markReaderIndex();
         int topicLength = in.readInt();
-
-        if (in.readableBytes() < topicLength + 4) {
-            in.resetReaderIndex();
-            return;
-        }
-
         byte[] topicBytes = new byte[topicLength];
         in.readBytes(topicBytes);
-        int seqNo = in.readInt();
+        String topic = new String(topicBytes, StandardCharsets.UTF_8);
 
-        out.add(new Message(new String(topicBytes, StandardCharsets.UTF_8), seqNo));
+        int offset = in.readInt();
+        int length = in.readInt();
+//        UnsafeBuffer buffer = new UnsafeBuffer(in.memoryAddress(), in.readableBytes()); //TODO IMPORTANT
+
+        out.add(new Message(messageType, topic, null, offset, length));
     }
 }

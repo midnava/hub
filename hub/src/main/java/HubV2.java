@@ -7,6 +7,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import v2.Message;
 import v2.MessageDecoder;
+import v2.MessageEncoder;
 import v2.MessageRate;
 
 import java.util.HashMap;
@@ -39,6 +40,7 @@ public class HubV2 {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(new MessageDecoder(), new ServerHandler());
+                            ch.pipeline().addLast(new MessageEncoder());
                             ch.config().setAllocator(allocator);
                         }
                     })
@@ -58,9 +60,6 @@ public class HubV2 {
         protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
             // Simulate processing
             MessageRate.instance.incrementServerSubMsgRate();
-            if (msg.seqNo % 1_000_000 == 0) {
-                System.out.println("Received message: " + msg.seqNo);
-            }
         }
 
         @Override
