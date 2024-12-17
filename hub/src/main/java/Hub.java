@@ -2,6 +2,7 @@
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -24,8 +25,8 @@ public class Hub {
 
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(4);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(4);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         AtomicInteger counter = new AtomicInteger();
         AtomicLong totalCount = new AtomicLong();
@@ -45,11 +46,15 @@ public class Hub {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                    .option(ChannelOption.SO_BACKLOG, 1024) // Серверная очередь соединений
+                    .childOption(ChannelOption.SO_RCVBUF, 1048576) // Размер буфера приема
+                    .childOption(ChannelOption.SO_SNDBUF, 1048576) // Размер буфера отправки
                     .childHandler(new ChannelInitializer<>() {
                         @Override
                         protected void initChannel(Channel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2));
+                            pipeline.addLast(new LengthFieldBasedFrameDecoder(2048, 0, 2, 0, 2));
                             pipeline.addLast(new LengthFieldPrepender(2));
                             pipeline.addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                                 @Override

@@ -1,31 +1,15 @@
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class SubscriberQueue {
     private final Channel ch;
-    private final BlockingQueue<ByteBuf> queue;
-    private final Thread thread;
+
 
     public SubscriberQueue(Channel ch) {
         this.ch = ch;
-        this.queue = new ArrayBlockingQueue<>(1024 * 500); //500K msg capacity
-
-        this.thread = new Thread(() -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    ByteBuf message = queue.take();
-                    handleMessage(message);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-
-        thread.start();
+        ch.eventLoop().scheduleAtFixedRate(() -> ch.flush(), 1, 2, TimeUnit.MILLISECONDS);
     }
 
     public boolean isActive() {
@@ -35,18 +19,13 @@ public class SubscriberQueue {
     public void addMessage(ByteBuf msg) {
         msg.retain();
         handleMessage(msg);
-//        try {
-//            queue.put(msg);
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
     }
 
     private void handleMessage(ByteBuf message) {
-        ch.writeAndFlush(message).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+        ch.write(message);
     }
 
-    public void close() {
-        thread.interrupt();
+    public void close() throws InterruptedException {
+        ch.close().sync();
     }
 }

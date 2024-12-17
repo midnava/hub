@@ -19,7 +19,7 @@ public class PublisherConnectorTest {
 
         publisherConnector.start("localhost", 8080);
 
-        for (int i = 0; i < 50_000; i++) { //warmup
+        for (int i = 0; i < 100_000; i++) { //warmup
             String message = "car message " + (i + 1);
             byte[] bytes = message.getBytes();
 
@@ -32,7 +32,7 @@ public class PublisherConnectorTest {
         }
 
         long startNano = System.nanoTime();
-        int count = 1_000_000; //TODO FIX ME
+        int count = 15_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
             String message = "car message " + (i + 1);

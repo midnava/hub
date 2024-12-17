@@ -13,8 +13,10 @@ import io.netty.handler.codec.MessageToByteEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 // Server Implementation
 class NettyServer {
@@ -26,23 +28,23 @@ class NettyServer {
 
     public void start() throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-//                    .option(ChannelOption.SO_LINGER, 5)
-//                    .option(ChannelOption.SO_BACKLOG, 1024)
-//                    .option(ChannelOption.SO_RCVBUF, 1048576)
-//                    .option(ChannelOption.SO_SNDBUF, 1048576)
+                    .option(ChannelOption.SO_BACKLOG, 1024)
+                    .childOption(ChannelOption.SO_RCVBUF, 2 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_SNDBUF, 2 * 1024 * 1024)
+                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(256 * 1024, 512 * 1024))
+                    .childOption(ChannelOption.TCP_NODELAY, true)
+                    .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(new MessageDecoder(), new ServerHandler());
                         }
-                    })
-                    .validate();
+                    });
 
             ChannelFuture future = bootstrap.bind(port).sync();
             System.out.println("Server started on port: " + port);
@@ -54,21 +56,13 @@ class NettyServer {
     }
 
     private static class ServerHandler extends SimpleChannelInboundHandler<Message> {
-        private static final AtomicInteger counter = new AtomicInteger();
-
-        static {
-            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-                int c = counter.getAndSet(0);
-                if (c > 0) {
-                    System.out.println("Msg rate is " + c);
-                }
-            }, 0, 1, TimeUnit.SECONDS);
-        }
-
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
-            counter.incrementAndGet();
-//            System.out.println("Received message: topic=" + msg.topic + ", seqNo=" + msg.seqNo);
+            // Simulate processing
+            MessageRate.instance.incrementServerSubMsgRate();
+            if (msg.seqNo % 1_000_000 == 0) {
+                System.out.println("Received message: " + msg.seqNo);
+            }
         }
 
         @Override
@@ -85,6 +79,7 @@ class NettyClient {
     private final int port;
     private Channel channel;
     private EventLoopGroup group;
+    private ScheduledExecutorService flushScheduler;
 
     public NettyClient(String host, int port) {
         this.host = host;
@@ -92,32 +87,40 @@ class NettyClient {
     }
 
     public void connect() throws InterruptedException {
-        group = new NioEventLoopGroup(1);
-
+        group = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
+                .option(ChannelOption.SO_RCVBUF, 2 * 1024 * 1024)
+                .option(ChannelOption.SO_SNDBUF, 2 * 1024 * 1024)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(256 * 1024, 512 * 1024))
+                .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-//                .option(ChannelOption.SO_BACKLOG, 1024)
-//                .option(ChannelOption.SO_LINGER, 5)
-//                .option(ChannelOption.SO_RCVBUF, 1048576)
-//                .option(ChannelOption.SO_SNDBUF, 1048576)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new MessageEncoder());
                     }
-                })
-                .validate();
+                });
 
         ChannelFuture future = bootstrap.connect(host, port).sync();
         channel = future.channel();
-        channel.eventLoop().scheduleAtFixedRate(() -> channel.flush(), 1, 1, TimeUnit.MILLISECONDS);
+
+        flushScheduler = Executors.newSingleThreadScheduledExecutor();
+        flushScheduler.scheduleAtFixedRate(() -> {
+            if (channel != null && channel.isActive()) {
+                channel.flush();
+            }
+        }, 1, 1, TimeUnit.MILLISECONDS);
     }
 
-    public void publish(String topic, int seqNo) {
+    public void publish(Message message) {
         if (channel != null && channel.isActive()) {
-            channel.write(new Message(topic, seqNo));
+            while (!channel.isWritable()) {
+                LockSupport.parkNanos(TimeUnit.MICROSECONDS.toNanos(500));
+            }
+            channel.write(message);
+            MessageRate.instance.incrementPubMsgRate();
         }
     }
 
@@ -127,6 +130,9 @@ class NettyClient {
         }
         if (group != null) {
             group.shutdownGracefully();
+        }
+        if (flushScheduler != null) {
+            flushScheduler.shutdown();
         }
     }
 }
@@ -181,40 +187,33 @@ class MessageDecoder extends ByteToMessageDecoder {
 public class NettyApp {
     public static void main(String[] args) throws InterruptedException {
         int port = 8080;
+        int totalMessages = 100_000_000;
 
         // Start Server in a Separate Thread
-        Thread thread = new Thread(() -> {
+        new Thread(() -> {
             try {
-                NettyServer nettyServer = new NettyServer(port);
-                nettyServer.start();
+                new NettyServer(port).start();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        });
-        thread.setDaemon(true);
-        thread.start();
+        }).start();
 
         // Give the Server Some Time to Start
-        System.out.println("WAITING");
-        Thread.sleep(5_000);
-        System.out.println("STARTED");
+        Thread.sleep(1000);
 
-
-        // Start Client, Connect, Publish Multiple Messages, and Disconnect
+        // Start Client, Connect, Publish Messages, and Disconnect
         NettyClient client = new NettyClient("localhost", port);
         client.connect();
 
-        int totalMessages = 50_000_000;
+        AtomicInteger counter = new AtomicInteger(1);
+        long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < totalMessages; i++) {
-            client.publish("topic", i);
+            client.publish(new Message("topic", counter.getAndIncrement()));
         }
 
-        Thread.sleep(10_000);
-
-        System.out.println("All messages sent successfully");
+        long endTime = System.currentTimeMillis();
+        System.out.println("Sent " + totalMessages + " messages in " + (endTime - startTime) + " ms");
         client.disconnect();
-        thread.interrupt();
-        thread.stop();
     }
 }
