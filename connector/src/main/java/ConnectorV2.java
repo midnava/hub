@@ -5,6 +5,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import v2.Message;
 import v2.MessageDecoder;
 import v2.MessageEncoder;
@@ -39,6 +40,13 @@ public class ConnectorV2 {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(
+                                64 * 1024, // Максимальная длина сообщения (защитный лимит)
+                                0,               // Смещение длины в сообщении (начало буфера)
+                                4,               // Размер поля длины (int)
+                                0,               // Смещение добавленной длины (нет дополнительных байт)
+                                4                // Байты длины включаются в итоговое сообщение)
+                        ));
                         ch.pipeline().addLast(new ReconnectClientHandler(bootstrap, host, port));
                         ch.pipeline().addLast(new MessageDecoder(), new ClientHandler());
                         ch.pipeline().addLast(new MessageEncoder());

@@ -10,19 +10,10 @@ import java.util.List;
 public class MessageDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        if (in.readableBytes() < 13) { //8 + 4 + 1
-            return;
-        }
-
-        in.markReaderIndex();
         MessageType messageType = MessageType.find(in.readByte());
         long seqNo = in.readLong();
 
         int topicLength = in.readInt();
-        if (in.readableBytes() < topicLength + 8) {
-            in.resetReaderIndex();
-            return;
-        }
 
         byte[] topicBytes = new byte[topicLength];
         in.readBytes(topicBytes);
