@@ -36,6 +36,7 @@ class NettyServer {
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childOption(ChannelOption.SO_RCVBUF, 2 * 1024 * 1024)
                     .childOption(ChannelOption.SO_SNDBUF, 2 * 1024 * 1024)
+                    .childOption(ChannelOption.AUTO_CLOSE, true)
                     .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(256 * 1024, 512 * 1024))
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
@@ -44,7 +45,8 @@ class NettyServer {
                         protected void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(new MessageDecoder(), new ServerHandler());
                         }
-                    });
+                    })
+                    .validate();
 
             ChannelFuture future = bootstrap.bind(port).sync();
             System.out.println("Server started on port: " + port);
@@ -95,13 +97,15 @@ class NettyClient {
                 .option(ChannelOption.SO_SNDBUF, 2 * 1024 * 1024)
                 .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(256 * 1024, 512 * 1024))
                 .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.AUTO_CLOSE, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new MessageEncoder());
                     }
-                });
+                })
+                .validate();
 
         ChannelFuture future = bootstrap.connect(host, port).sync();
         channel = future.channel();
@@ -190,13 +194,16 @@ public class NettyApp {
         int totalMessages = 100_000_000;
 
         // Start Server in a Separate Thread
-        new Thread(() -> {
+        Thread thread = new Thread(() -> {
             try {
-                new NettyServer(port).start();
+                NettyServer nettyServer = new NettyServer(port);
+                nettyServer.start();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }).start();
+        });
+        thread.setDaemon(true);
+        thread.start();
 
         // Give the Server Some Time to Start
         Thread.sleep(1000);
@@ -214,6 +221,8 @@ public class NettyApp {
 
         long endTime = System.currentTimeMillis();
         System.out.println("Sent " + totalMessages + " messages in " + (endTime - startTime) + " ms");
+
         client.disconnect();
+        thread.interrupt();
     }
 }
