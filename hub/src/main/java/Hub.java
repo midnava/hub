@@ -64,21 +64,21 @@ public class Hub {
 
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws InterruptedException {
-                                    HubMessage hubMessage = MessageHubAdapter.deserializeHeader(msg); //todo only header
+                                    OldHubMessage oldHubMessage = MessageHubAdapter.deserializeHeader(msg); //todo only header
 
-                                    if (hubMessage.getMsgType() == MessageTypeOld.SUBSCRIBE) {
-                                        String topic = hubMessage.getTopic();
+                                    if (oldHubMessage.getMsgType() == MessageTypeOld.SUBSCRIBE) {
+                                        String topic = oldHubMessage.getTopic();
                                         Channel channel = ctx.channel();
                                         subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
 
-                                        HubMessage response = new HubMessage(MessageTypeOld.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
+                                        OldHubMessage response = new OldHubMessage(MessageTypeOld.SUBSCRIBE_RESPONSE, "topic", "subscribed on " + topic);
                                         ByteBuf buffer = ch.alloc().buffer(512);
 
                                         ctx.writeAndFlush(MessageHubAdapter.serialize(response, buffer));
                                         System.out.println("Subscriber added to topic: " + topic);
-                                    } else if (hubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
+                                    } else if (oldHubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
                                         counter.incrementAndGet();
-                                        String topic = hubMessage.getTopic();
+                                        String topic = oldHubMessage.getTopic();
                                         msg.resetReaderIndex();
 
                                         List<SubscriberQueue> topicSubscribers = subscribers.get(topic);
@@ -93,7 +93,7 @@ public class Hub {
 //                                            System.out.println("No subscribers for topic: " + topic);
                                         }
                                     } else {
-                                        throw new IllegalArgumentException(hubMessage.toString());
+                                        throw new IllegalArgumentException(oldHubMessage.toString());
                                     }
                                 }
 

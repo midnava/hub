@@ -10,7 +10,7 @@ public class NettyHubMessageAdapter {
     private static final ThreadLocal<UnsafeBuffer> bufferThreadLocal = ThreadLocal
             .withInitial(() -> new UnsafeBuffer(ByteBuffer.allocate(128 * 1024)));
 
-    public static void serialize(NettyHubMessage msg, ByteBuf out) {
+    public static void serialize(HubMessage msg, ByteBuf out) {
         byte[] topicBytes = msg.getTopic().getBytes(StandardCharsets.US_ASCII);
         int topicLength = topicBytes.length;
         int offset = msg.getOffset();
@@ -34,7 +34,7 @@ public class NettyHubMessageAdapter {
         out.writeBytes(msg.getByteBuf().byteBuffer().array(), 0, buffLength);
     }
 
-    public static NettyHubMessage deserialize(ByteBuf in) {
+    public static HubMessage deserialize(ByteBuf in) {
         MessageType messageType = MessageType.find(in.readByte());
         long seqNo = in.readLong();
 
@@ -46,7 +46,7 @@ public class NettyHubMessageAdapter {
         String topic = new String(topicBytes, StandardCharsets.US_ASCII);
 
         if (messageType == MessageType.MESSAGE) { //need just redirect
-            return new NettyHubMessage(messageType, topic, seqNo, null, 0, 0);
+            return new HubMessage(messageType, topic, seqNo, null, 0, 0);
         } else {
             UnsafeBuffer buffer = bufferThreadLocal.get();
             int offset = in.readInt();
@@ -60,11 +60,11 @@ public class NettyHubMessageAdapter {
 //        } else {
             in.readBytes(buffer.byteBuffer().array(), 0, bufferLength);
 //        }
-            return new NettyHubMessage(messageType, topic, seqNo, buffer, offset, bufferLength);
+            return new HubMessage(messageType, topic, seqNo, buffer, offset, bufferLength);
         }
     }
 
-    public static NettyHubMessage deserializeHeader(ByteBuf in) {
+    public static HubMessage deserializeHeader(ByteBuf in) {
         MessageType messageType = MessageType.find(in.readByte());
         long seqNo = in.readLong();
 
@@ -75,7 +75,7 @@ public class NettyHubMessageAdapter {
 
         String topic = new String(topicBytes, StandardCharsets.US_ASCII);
 
-        return new NettyHubMessage(messageType, topic, seqNo, null, 0, 0);
+        return new HubMessage(messageType, topic, seqNo, null, 0, 0);
     }
 }
 

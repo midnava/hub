@@ -6,10 +6,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import v2.MessageDecoder;
-import v2.MessageEncoder;
+import v2.HubMessage;
+import v2.MessageConnectorDecoder;
+import v2.MessageConnectorEncoder;
 import v2.MessageRate;
-import v2.NettyHubMessage;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -18,9 +18,9 @@ import java.util.function.Consumer;
 public class ConnectorV2 {
     private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
-    private final Consumer<NettyHubMessage> messageConsumer;
+    private final Consumer<HubMessage> messageConsumer;
 
-    public ConnectorV2(Consumer<NettyHubMessage> messageConsumer) {
+    public ConnectorV2(Consumer<HubMessage> messageConsumer) {
         this.messageConsumer = messageConsumer;
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
@@ -48,8 +48,8 @@ public class ConnectorV2 {
                                 4                // Байты длины включаются в итоговое сообщение)
                         ));
                         ch.pipeline().addLast(new ReconnectClientHandler(bootstrap, host, port));
-                        ch.pipeline().addLast(new MessageDecoder(), new ClientHandler());
-                        ch.pipeline().addLast(new MessageEncoder());
+                        ch.pipeline().addLast(new MessageConnectorDecoder(), new ClientHandler());
+                        ch.pipeline().addLast(new MessageConnectorEncoder());
                         ch.config().setAllocator(allocator);
                     }
                 })
@@ -62,12 +62,12 @@ public class ConnectorV2 {
         System.out.println("Publisher is starting...");
     }
 
-    public void publish(NettyHubMessage nettyHubMessage) {
+    public void publish(HubMessage hubMessage) {
         if (channel != null && channel.isActive()) {
             while (!channel.isWritable()) {
                 LockSupport.parkNanos(TimeUnit.MICROSECONDS.toNanos(500));
             }
-            channel.write(nettyHubMessage);
+            channel.write(hubMessage);
             MessageRate.instance.incrementPubMsgRate();
         } else {
             //throw new IllegalArgumentException("Transport is not ready");
@@ -93,9 +93,9 @@ public class ConnectorV2 {
         }
     }
 
-    private class ClientHandler extends SimpleChannelInboundHandler<NettyHubMessage> {
+    private class ClientHandler extends SimpleChannelInboundHandler<HubMessage> {
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, NettyHubMessage msg) {
+        protected void channelRead0(ChannelHandlerContext ctx, HubMessage msg) {
             // Simulate processing
             MessageRate.instance.incrementSubMsgRate();
             messageConsumer.accept(msg);

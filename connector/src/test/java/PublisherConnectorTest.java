@@ -7,13 +7,13 @@ public class PublisherConnectorTest {
 
     public static void main(String[] args) throws InterruptedException {
         Connector publisherConnector = new Connector(byteBuf -> {
-            HubMessage hubMessage = MessageHubAdapter.deserializeHeader(byteBuf);
+            OldHubMessage oldHubMessage = MessageHubAdapter.deserializeHeader(byteBuf);
 
-            if (hubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
+            if (oldHubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
 
             } else {
-                HubMessage fullHubMessage = MessageHubAdapter.deserialize(byteBuf);
-                System.out.println("Received msg: " + fullHubMessage);
+                OldHubMessage fullOldHubMessage = MessageHubAdapter.deserialize(byteBuf);
+                System.out.println("Received msg: " + fullOldHubMessage);
             }
         });
 
@@ -23,8 +23,8 @@ public class PublisherConnectorTest {
             String message = "car message " + (i + 1);
             byte[] bytes = message.getBytes();
 
-            HubMessage hubMessage = new HubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
-            publisherConnector.publish(hubMessage);
+            OldHubMessage oldHubMessage = new OldHubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
+            publisherConnector.publish(oldHubMessage);
 
             if (i % 1000 == 0) {
                 System.out.println("Sent: " + message);
@@ -38,8 +38,8 @@ public class PublisherConnectorTest {
             String message = "car message " + (i + 1);
             byte[] bytes = message.getBytes();
 
-            HubMessage hubMessage = new HubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
-            publisherConnector.publish(hubMessage);
+            OldHubMessage oldHubMessage = new OldHubMessage(MessageTypeOld.MESSAGE, "topic", new UnsafeBuffer(ByteBuffer.wrap(bytes)), bytes.length);
+            publisherConnector.publish(oldHubMessage);
 
             if (i % 50000 == 0) {
                 System.out.println("Sent: " + message);

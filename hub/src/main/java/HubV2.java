@@ -47,8 +47,8 @@ public class HubV2 {
                                     0,               // Смещение добавленной длины (нет дополнительных байт)
                                     4                // Байты длины включаются в итоговое сообщение)
                             ));
-                            ch.pipeline().addLast(new MessageDecoder(), new ServerHandler(ch));
-                            ch.pipeline().addLast(new MessageEncoder());
+                            ch.pipeline().addLast(new MessageConnectorDecoder(), new ServerHandler(ch));
+                            ch.pipeline().addLast(new MessageConnectorEncoder());
                             ch.config().setAllocator(allocator);
                         }
                     })
@@ -63,7 +63,7 @@ public class HubV2 {
         }
     }
 
-    private static class ServerHandler extends SimpleChannelInboundHandler<NettyHubMessage> {
+    private static class ServerHandler extends SimpleChannelInboundHandler<HubMessage> {
         private volatile long currentIndex = -1;
         private final AtomicLong globalSeqNo = new AtomicLong();
 
@@ -72,7 +72,7 @@ public class HubV2 {
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, NettyHubMessage msg) {
+        protected void channelRead0(ChannelHandlerContext ctx, HubMessage msg) {
             MessageRate.instance.incrementServerSubMsgRate();
             long seqNo = msg.getSeqNo();
 
@@ -88,7 +88,7 @@ public class HubV2 {
                 Channel channel = ctx.channel();
                 subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
 
-                NettyHubMessage response = new NettyHubMessage(MessageType.SUBSCRIBE, "topic", globalSeqNo.incrementAndGet(), "subscribed on " + topic);
+                HubMessage response = new HubMessage(MessageType.SUBSCRIBE, "topic", globalSeqNo.incrementAndGet(), "subscribed on " + topic);
                 ctx.writeAndFlush(response);
 
                 MessageRate.instance.incrementServerPubMsgRate();

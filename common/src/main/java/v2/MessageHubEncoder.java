@@ -6,9 +6,9 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 import java.nio.charset.StandardCharsets;
 
-public class MessageEncoder extends MessageToByteEncoder<NettyHubMessage> {
+public class MessageHubEncoder extends MessageToByteEncoder<HubMessage> {
     @Override
-    protected void encode(ChannelHandlerContext ctx, NettyHubMessage msg, ByteBuf out) {
+    protected void encode(ChannelHandlerContext ctx, HubMessage msg, ByteBuf out) {
         byte[] topicBytes = msg.getTopic().getBytes(StandardCharsets.US_ASCII);
         int topicLength = topicBytes.length;
         int offset = msg.getOffset();

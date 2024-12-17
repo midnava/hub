@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class MessageDecoder extends ByteToMessageDecoder {
+public class MessageConnectorDecoder extends ByteToMessageDecoder {
     private final ThreadLocal<UnsafeBuffer> bufferThreadLocal = ThreadLocal
             .withInitial(() -> new UnsafeBuffer(ByteBuffer.allocate(128 * 1024)));
 
@@ -37,7 +37,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
 //        } else {
         in.readBytes(buffer.byteBuffer().array(), 0, bufferLength);
 //        }
-        out.add(new NettyHubMessage(messageType, topic, seqNo, buffer, offset, bufferLength));
+        out.add(new HubMessage(messageType, topic, seqNo, buffer, offset, bufferLength));
 
     }
 }

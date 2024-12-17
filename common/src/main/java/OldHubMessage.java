@@ -2,7 +2,7 @@ import org.agrona.concurrent.UnsafeBuffer;
 
 import java.nio.ByteBuffer;
 
-public class HubMessage {
+public class OldHubMessage {
     public static final UnsafeBuffer ZERO_BUFFER = new UnsafeBuffer(ByteBuffer.allocate(0));
 
     private final MessageTypeOld msgType;
@@ -10,21 +10,21 @@ public class HubMessage {
     private final UnsafeBuffer msgBytes; //text or message bytes
     private final int msgBytesLength;
 
-    public HubMessage(MessageTypeOld msgType, String topic, UnsafeBuffer msgBytes, int msgBytesLength) {
+    public OldHubMessage(MessageTypeOld msgType, String topic, UnsafeBuffer msgBytes, int msgBytesLength) {
         this.msgType = msgType;
         this.topic = topic;
         this.msgBytes = msgBytes;
         this.msgBytesLength = msgBytesLength;
     }
 
-    public HubMessage(MessageTypeOld msgType, String topic) {
+    public OldHubMessage(MessageTypeOld msgType, String topic) {
         this.msgType = msgType;
         this.topic = topic;
         this.msgBytes = ZERO_BUFFER;
         this.msgBytesLength = 0;
     }
 
-    public HubMessage(MessageTypeOld msgType, String topic, String msg) {
+    public OldHubMessage(MessageTypeOld msgType, String topic, String msg) {
         this.msgType = msgType;
         this.topic = topic;
         this.msgBytes = new UnsafeBuffer(ByteBuffer.allocate(msg.length() + 4));

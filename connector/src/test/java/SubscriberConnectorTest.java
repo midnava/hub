@@ -20,12 +20,12 @@ public class SubscriberConnectorTest {
         }, 0, 1, TimeUnit.SECONDS);
 
         Connector subscriberConnector = new Connector(byteBuf -> {
-            HubMessage hubMessage = MessageHubAdapter.deserialize(byteBuf);
+            OldHubMessage oldHubMessage = MessageHubAdapter.deserialize(byteBuf);
 
-            if (hubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
+            if (oldHubMessage.getMsgType() == MessageTypeOld.MESSAGE) {
                 counter.incrementAndGet();
             } else {
-                System.out.println("Received msg: " + hubMessage);
+                System.out.println("Received msg: " + oldHubMessage);
             }
         });
 

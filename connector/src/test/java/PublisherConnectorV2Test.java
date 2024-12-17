@@ -1,6 +1,6 @@
 import org.agrona.concurrent.UnsafeBuffer;
+import v2.HubMessage;
 import v2.MessageType;
-import v2.NettyHubMessage;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -9,9 +9,9 @@ import java.util.function.Consumer;
 public class PublisherConnectorV2Test {
 
     public static void main(String[] args) throws InterruptedException {
-        ConnectorV2 publisherConnector = new ConnectorV2(new Consumer<NettyHubMessage>() {
+        ConnectorV2 publisherConnector = new ConnectorV2(new Consumer<HubMessage>() {
             @Override
-            public void accept(NettyHubMessage message) {
+            public void accept(HubMessage message) {
                 System.out.println("Pub IN: " + message);
             }
         });
@@ -31,14 +31,14 @@ public class PublisherConnectorV2Test {
 
         int warmUpCount = 100_000;
         for (int i = 0; i < warmUpCount; i++) { //warmup
-            publisherConnector.publish(new NettyHubMessage(MessageType.MESSAGE, "topic", i, msgBytes, 0, length));
+            publisherConnector.publish(new HubMessage(MessageType.MESSAGE, "topic", i, msgBytes, 0, length));
         }
 
         long startNano = System.nanoTime();
         int count = 50_000_000; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
-            publisherConnector.publish(new NettyHubMessage(MessageType.MESSAGE, "topic", i + warmUpCount, msgBytes, 0, length));
+            publisherConnector.publish(new HubMessage(MessageType.MESSAGE, "topic", i + warmUpCount, msgBytes, 0, length));
 
             if (i % 1_000_000 == 0) {
                 System.out.println("Sent: " + i);

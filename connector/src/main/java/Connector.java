@@ -61,20 +61,20 @@ public class Connector {
         System.out.println("Publisher is starting...");
     }
 
-    public void publish(HubMessage hubMessage) throws InterruptedException {
-        ByteBuf byteBuf = MessageHubAdapter.serialize(hubMessage, ch.alloc().buffer(hubMessage.getMsgBytesLength() + 128));
+    public void publish(OldHubMessage oldHubMessage) throws InterruptedException {
+        ByteBuf byteBuf = MessageHubAdapter.serialize(oldHubMessage, ch.alloc().buffer(oldHubMessage.getMsgBytesLength() + 128));
 
         ch.writeAndFlush(byteBuf);
     }
 
     public void subscribe(String topic) throws InterruptedException {
-        HubMessage hubMessage = new HubMessage(MessageTypeOld.SUBSCRIBE, topic);
-        publish(hubMessage);
+        OldHubMessage oldHubMessage = new OldHubMessage(MessageTypeOld.SUBSCRIBE, topic);
+        publish(oldHubMessage);
     }
 
     public void unsubscribe(String topic) throws InterruptedException {
-        HubMessage hubMessage = new HubMessage(MessageTypeOld.UNSUBSCRIBE, topic);
-        publish(hubMessage);
+        OldHubMessage oldHubMessage = new OldHubMessage(MessageTypeOld.UNSUBSCRIBE, topic);
+        publish(oldHubMessage);
     }
 
     public void close() throws InterruptedException {

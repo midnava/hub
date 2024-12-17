@@ -4,8 +4,7 @@ import org.agrona.concurrent.UnsafeBuffer;
 
 import java.nio.ByteBuffer;
 
-// Message Model
-public class NettyHubMessage {
+public class HubMessage {
     private static final byte[] EMPTY_BUFFER = new byte[0];
 
     private final MessageType messageType;
@@ -15,8 +14,7 @@ public class NettyHubMessage {
     private final int offset;
     private final int buffLength;
 
-
-    public NettyHubMessage(MessageType messageType, String topic, long seqNo, UnsafeBuffer byteBuf, int offset, int buffLength) {
+    public HubMessage(MessageType messageType, String topic, long seqNo, UnsafeBuffer byteBuf, int offset, int buffLength) {
         this.messageType = messageType;
         this.topic = topic;
         this.seqNo = seqNo;
@@ -25,7 +23,7 @@ public class NettyHubMessage {
         this.buffLength = buffLength;
     }
 
-    public NettyHubMessage(MessageType messageType, String topic, long seqNo, String msg) {
+    public HubMessage(MessageType messageType, String topic, long seqNo, String msg) {
         this.messageType = messageType;
         this.topic = topic;
         this.seqNo = seqNo;

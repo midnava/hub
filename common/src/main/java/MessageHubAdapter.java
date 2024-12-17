@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 public class MessageHubAdapter {
 
-    public static ByteBuf serialize(HubMessage msg, ByteBuf byteBuf) {
+    public static ByteBuf serialize(OldHubMessage msg, ByteBuf byteBuf) {
         byteBuf.writeByte(msg.getMsgType().getId());
         byteBuf.writeInt(msg.getTopic().length());
         byteBuf.writeCharSequence(msg.getTopic(), StandardCharsets.US_ASCII);
@@ -19,7 +19,7 @@ public class MessageHubAdapter {
         return byteBuf;
     }
 
-    public static HubMessage deserialize(ByteBuf b) {
+    public static OldHubMessage deserialize(ByteBuf b) {
 
         MessageTypeOld msgType = MessageTypeOld.find(b.readByte());
         int topicLength = b.readInt();
@@ -28,15 +28,15 @@ public class MessageHubAdapter {
 
         UnsafeBuffer buffer = new UnsafeBuffer(b.memoryAddress(), b.readableBytes()); //TODO IMPORTANT
 
-        return new HubMessage(msgType, topic, buffer, bufferLength);
+        return new OldHubMessage(msgType, topic, buffer, bufferLength);
     }
 
-    public static HubMessage deserializeHeader(ByteBuf b) {
+    public static OldHubMessage deserializeHeader(ByteBuf b) {
 
         MessageTypeOld msgType = MessageTypeOld.find(b.readByte());
         int topicLength = b.readInt();
         String topic = b.readCharSequence(topicLength, StandardCharsets.US_ASCII).toString();
 
-        return new HubMessage(msgType, topic);
+        return new OldHubMessage(msgType, topic);
     }
 }
