@@ -30,10 +30,10 @@ public class HubV2 {
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 1024)
-                    .childOption(ChannelOption.SO_RCVBUF, 2 * 1024 * 1024)
-                    .childOption(ChannelOption.SO_SNDBUF, 2 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_RCVBUF, 4 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_SNDBUF, 4 * 1024 * 1024)
                     .childOption(ChannelOption.AUTO_CLOSE, true)
-                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(256 * 1024, 512 * 1024))
+                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024, 4 * 1024 * 1024))
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override

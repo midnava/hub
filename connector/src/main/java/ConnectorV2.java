@@ -16,7 +16,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
 public class ConnectorV2 {
-    private final EventLoopGroup group = new NioEventLoopGroup(0);
+    private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
     private final Consumer<ByteBuf> messageConsumer;
 
@@ -32,14 +32,15 @@ public class ConnectorV2 {
 
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.SO_RCVBUF, 2 * 1024 * 1024)
-                .option(ChannelOption.SO_SNDBUF, 2 * 1024 * 1024)
-                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(256 * 1024, 512 * 1024))
+                .option(ChannelOption.SO_RCVBUF, 4 * 1024 * 1024)
+                .option(ChannelOption.SO_SNDBUF, 4 * 1024 * 1024)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024, 4 * 1024 * 1024))
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.AUTO_CLOSE, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast(new ReconnectClientHandler(bootstrap, host, port));
                         ch.pipeline().addLast(new MessageDecoder(), new ClientHandler());
                         ch.pipeline().addLast(new MessageEncoder());
                         ch.config().setAllocator(allocator);
