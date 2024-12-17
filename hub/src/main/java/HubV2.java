@@ -39,7 +39,7 @@ public class HubV2 {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
-                            ch.pipeline().addLast(new MessageDecoder(), new ServerHandler());
+                            ch.pipeline().addLast(new MessageDecoder(), new ServerHandler(ch));
                             ch.pipeline().addLast(new MessageEncoder());
                             ch.config().setAllocator(allocator);
                         }
@@ -57,6 +57,10 @@ public class HubV2 {
 
     private static class ServerHandler extends SimpleChannelInboundHandler<Message> {
         private volatile long currentIndex = -1;
+
+        public ServerHandler(SocketChannel ch) {
+            System.out.println("Created: " + ch.metadata().toString());
+        }
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
