@@ -17,6 +17,8 @@ public class MessageConnectorDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+        System.out.println("Connector in: " + in.toString(StandardCharsets.UTF_8));
+
         MessageType messageType = MessageType.find(in.readByte());
         long seqNo = in.readLong();
 

@@ -31,6 +31,8 @@ public class MessageConnectorEncoder extends MessageToByteEncoder<HubMessage> {
         out.writeInt(offset);
         out.writeInt(buffLength);
         out.writeBytes(msg.getByteBuf().byteBuffer().array(), 0, buffLength);
+
+        System.out.println("Connector out [" + messageLength + "]: " + out.toString(StandardCharsets.UTF_8));
     }
 }
 

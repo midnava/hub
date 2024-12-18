@@ -1,10 +1,7 @@
 package hub;
 
-import common.HubMessage;
 import common.MessageRate;
-import common.MessageType;
 import hub.adapters.MessageHubEncoder;
-import hub.adapters.NettyHubMessageAdapter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -14,16 +11,21 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.util.ReferenceCounted;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Hub {
+public class HubV2 {
     private static final int port = 8080;
     private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
     private static final ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
@@ -58,6 +60,7 @@ public class Hub {
                                     0,               // Смещение добавленной длины (нет дополнительных байт)
                                     4                // Байты длины включаются в итоговое сообщение)
                             ));
+                            ch.pipeline().addLast(new LengthFieldPrepender(4));
                             ch.pipeline().addLast(new ServerHandler(ch));
                             ch.pipeline().addLast(new MessageHubEncoder());
                             ch.config().setAllocator(allocator);
@@ -73,6 +76,7 @@ public class Hub {
             workerGroup.shutdownGracefully();
         }
     }
+    //
 
     private static class ServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         private volatile long currentIndex = -1;
@@ -86,66 +90,21 @@ public class Hub {
         protected void channelRead0(ChannelHandlerContext ctx, ByteBuf buff) {
             MessageRate.instance.incrementServerSubMsgRate();
 
-            buff.markReaderIndex();
+            buff.markReaderIndex(); // Сохраняем позицию для сброса, если потребуется
+            int readableBytes = buff.readableBytes();
 
-            int length = buff.readableBytes();
-            int readerIndex = buff.readerIndex();
-            int totalLength = length + 4;
+            System.out.println("Server in [" + readableBytes + "]: " + buff.toString(StandardCharsets.UTF_8));
 
-            ByteBuf copiedMessage = UnpooledByteBufAllocator.DEFAULT.buffer(totalLength); //+ total length
-            copiedMessage.writeInt(totalLength);
-            copiedMessage.writeBytes(buff);
+            int totalLength = readableBytes + 4; // +4 байта для длины
+            ByteBuf copiedMessage = ctx.alloc().buffer(totalLength);
 
-            buff.resetReaderIndex();
-            HubMessage msg = NettyHubMessageAdapter.deserializeHeader(buff);
 
-            long seqNo = msg.getSeqNo();
+            copiedMessage.writeInt(totalLength); // Записываем длину
+            copiedMessage.writeBytes(buff, 0, readableBytes); // Записываем данные
+            buff.resetReaderIndex(); // Сбрасываем readerIndex для будущей обработки
 
-            if (currentIndex > 0 && currentIndex + 1 != seqNo) {
-                System.out.println("Error: " + currentIndex + " vs " + seqNo);
-            }
-            currentIndex = seqNo;
-
-            String topic = msg.getTopic();
-            MessageType messageType = msg.getMessageType();
-
-            if (messageType == MessageType.SUBSCRIBE) {
-                Channel channel = ctx.channel();
-                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
-
-                HubMessage response = new HubMessage(MessageType.SUBSCRIBE, "topic", globalSeqNo.incrementAndGet(), "subscribed on " + topic);
-                ctx.writeAndFlush(response);
-
-                MessageRate.instance.incrementServerPubMsgRate();
-                System.out.println("Subscriber added to topic: " + topic);
-            } else if (messageType == MessageType.MESSAGE) {
-                MessageRate.instance.incrementSubMsgRate();
-
-                if (seqNo % 1_000_000 == 0) {
-                    System.out.println("MSG " + seqNo);
-                }
-
-//                buff.resetReaderIndex();
-//                buff.resetWriterIndex();
-
-//                ByteBuf copiedMessage1 = copiedMessage.retainedDuplicate();
-                broadcastMessage(topic, copiedMessage);
-
-//                List<hub.SubscriberQueue> topicSubscribers = subscribers.get(topic);
-//                if (topicSubscribers != null) {
-//                    for (hub.SubscriberQueue queue : topicSubscribers) {
-//                        if (queue.isActive()) {
-//                            queue.addMessage(msg);
-//                        }
-//                    }
-////                                            System.out.println("Message sent to subscribers of topic: " + topic);
-//                } else {
-////                                            System.out.println("No subscribers for topic: " + topic);
-//                }
-//            } else {
-//                throw new IllegalArgumentException(hubMessage.toString());
-//            }
-            }
+            MessageRate.instance.incrementSubMsgRate();
+            broadcastMessage("topic", copiedMessage);
         }
 
         @Override
@@ -170,19 +129,8 @@ public class Hub {
         }
 
         private void broadcastMessage(String topic, ByteBuf buff) {
-//            List<hub.SubscriberQueue> topicSubscribers = subscribers.get(topic);
-//                if (topicSubscribers != null) {
-//                    for (SubscriberQueue queue : topicSubscribers) {
-//
-//                    }
+
             clientQueues.forEach((channel, queue) -> {
-//                channel.alloc().buffer();
-//                ByteBuf queuedMessage = buff.retain(); //retainedDuplicate
-                // Allocate a new buffer from the pool
-
-//                ByteBuf pooledBuffer = channel.alloc().buffer(buff.readableBytes());
-//                pooledBuffer.writeBytes(buff, buff.readerIndex(), buff.readableBytes()); // Copy data
-
                 ByteBuf queuedMessage = buff.retainedDuplicate();
                 queue.add(queuedMessage);
             });
@@ -198,7 +146,7 @@ public class Hub {
                     if (message != null) {
                         MessageRate.instance.incrementServerPubMsgRate();
                         channel.writeAndFlush(message).sync(); // Ensure messages are sent in order
-                        System.out.println("Sent message to " + channel.remoteAddress());
+                        System.out.println("Sent message to " + channel.remoteAddress() + " [" + message.readableBytes() + "]:" + message.toString(StandardCharsets.UTF_8));
                     } else {
                         Thread.sleep(1); // Avoid busy-waiting
                     }

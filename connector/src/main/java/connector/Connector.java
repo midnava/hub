@@ -13,6 +13,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -50,6 +51,7 @@ public class Connector {
                                 0,               // Смещение добавленной длины (нет дополнительных байт)
                                 4                // Байты длины включаются в итоговое сообщение)
                         ));
+                        ch.pipeline().addLast(new LengthFieldPrepender(4));
                         ch.pipeline().addLast(new ReconnectClientHandler(bootstrap, host, port));
                         ch.pipeline().addLast(new MessageConnectorDecoder(), new ClientHandler());
                         ch.pipeline().addLast(new MessageConnectorEncoder());

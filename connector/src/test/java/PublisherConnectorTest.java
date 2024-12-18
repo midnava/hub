@@ -15,7 +15,7 @@ public class PublisherConnectorTest {
         Connector publisherConnector = new Connector(new Consumer<HubMessage>() {
             @Override
             public void accept(HubMessage message) {
-                System.out.println("Pub IN: " + message);
+                System.out.println("Pub IN: " + message.toString());
             }
         });
 
