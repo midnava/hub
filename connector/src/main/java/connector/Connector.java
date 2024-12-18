@@ -2,6 +2,7 @@ package connector;
 
 import common.HubMessage;
 import common.MessageRate;
+import common.MessageType;
 import common.connector.MessageConnectorDecoder;
 import common.connector.MessageConnectorEncoder;
 import io.netty.bootstrap.Bootstrap;
@@ -64,7 +65,7 @@ public class Connector {
         System.out.println("Publisher is starting...");
     }
 
-    public void publish(HubMessage hubMessage) {
+    public void publish(HubMessage hubMessage) { //TODO FIX ME SeqNO - publish only UnsafeBuffer
         if (channel != null && channel.isActive()) {
             while (!channel.isWritable()) {
                 LockSupport.parkNanos(TimeUnit.MICROSECONDS.toNanos(500));
@@ -72,18 +73,18 @@ public class Connector {
             channel.write(hubMessage);
             MessageRate.instance.incrementPubMsgRate();
         } else {
-            //throw new IllegalArgumentException("Transport is not ready");
+            throw new IllegalArgumentException("Transport is not ready");
         }
     }
 
-    public void subscribe(String topic) {
-//        HubMessage hubMessage = new HubMessage(MessageType.SUBSCRIBE, topic);
-//        publish(hubMessage);
+    public void subscribe(String topic, String appName) {
+        HubMessage hubMessage = new HubMessage(MessageType.SUBSCRIBE, topic, 0, appName); //TODO FIX ME SeqNO
+        publish(hubMessage);
     }
 
-    public void unsubscribe(String topic) {
-//        HubMessage hubMessage = new HubMessage(MessageType.UNSUBSCRIBE, topic);
-//        publish(hubMessage);
+    public void unsubscribe(String topic, String appName) {
+        HubMessage hubMessage = new HubMessage(MessageType.UNSUBSCRIBE, topic, 0, appName); //TODO FIX ME SeqNO
+        publish(hubMessage);
     }
 
     public void close() {
