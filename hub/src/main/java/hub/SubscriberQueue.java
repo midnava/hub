@@ -1,6 +1,7 @@
 package hub;
 
 import common.HubMessage;
+import common.MessageRate;
 import io.netty.channel.Channel;
 
 import java.util.concurrent.TimeUnit;
@@ -24,6 +25,7 @@ public class SubscriberQueue {
 
     private void handleMessage(HubMessage message) {
         ch.write(message);
+        MessageRate.instance.incrementServerPubMsgRate();
     }
 
     public void close() throws InterruptedException {

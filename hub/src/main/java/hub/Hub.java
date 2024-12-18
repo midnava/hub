@@ -104,7 +104,6 @@ public class Hub {
                 MessageRate.instance.incrementServerPubMsgRate();
                 System.out.println("Subscriber added to topic: " + topic);
             } else if (messageType == MessageType.MESSAGE) {
-                MessageRate.instance.incrementSubMsgRate();
 
                 if (seqNo % 1_000_000 == 0) {
                     System.out.println("MSG " + seqNo + ": " + msg.getByteBuf().getStringAscii(0));
