@@ -6,7 +6,6 @@ import common.MessageType;
 import hub.adapters.MessageHubDecoder;
 import hub.adapters.MessageHubEncoder;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.*;
@@ -18,19 +17,16 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Hub {
     private static final int port = 8080;
     private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
-    private static final ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
-    private static final Map<Channel, Queue<ByteBuf>> clientQueues = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(4);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(4);
         ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
 
 
@@ -97,7 +93,7 @@ public class Hub {
 
             if (messageType == MessageType.SUBSCRIBE) {
                 Channel channel = ctx.channel();
-                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel, virtualThreadExecutor));
+                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
 
                 HubMessage response = new HubMessage(MessageType.SUBSCRIBE, "topic", globalSeqNo.incrementAndGet(), "subscribed on " + topic);
                 ctx.writeAndFlush(response);
@@ -129,15 +125,12 @@ public class Hub {
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
             Channel channel = ctx.channel();
-            clientQueues.put(channel, new ConcurrentLinkedQueue<>());
-            virtualThreadExecutor.submit(() -> processClientQueue(channel));
             System.out.println("Client connected: " + channel.remoteAddress());
         }
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) {
             Channel channel = ctx.channel();
-            clientQueues.remove(channel);
             System.out.println("Client disconnected: " + channel.remoteAddress());
         }
 
@@ -145,33 +138,6 @@ public class Hub {
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             cause.printStackTrace();
             ctx.close();
-        }
-
-        private void broadcastMessage(String topic, ByteBuf message) {
-            clientQueues.forEach((channel, queue) -> {
-                ByteBuf queuedMessage = message.retainedDuplicate();
-                queue.add(queuedMessage);
-            });
-        }
-
-        private void processClientQueue(Channel channel) {
-            Queue<ByteBuf> queue = clientQueues.get(channel);
-            if (queue == null) return;
-
-            try {
-                while (channel.isActive()) {
-                    ByteBuf message = queue.poll();
-                    if (message != null) {
-                        channel.writeAndFlush(message).sync(); // Ensure messages are sent in order
-                    } else {
-                        Thread.sleep(1); // Avoid busy-waiting
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (Exception e) {
-                System.err.println("Error processing queue for channel: " + e.getMessage());
-            }
         }
     }
 }
