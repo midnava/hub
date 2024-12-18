@@ -1,5 +1,6 @@
 package hub;
 
+import common.MessageRate;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -7,6 +8,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 
 import java.util.Map;
 import java.util.Queue;
@@ -40,9 +42,17 @@ public class GCFreeBinaryServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
+                            ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(
+                                    64 * 1024, // Максимальная длина сообщения (защитный лимит)
+                                    0,               // Смещение длины в сообщении (начало буфера)
+                                    4,               // Размер поля длины (int)
+                                    0,               // Смещение добавленной длины (нет дополнительных байт)
+                                    4                // Байты длины включаются в итоговое сообщение)
+                            ));
                             ch.pipeline().addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
+                                    MessageRate.instance.incrementServerSubMsgRate();
                                     // Parse topic and prepare message for broadcast
                                     String topic = extractTopic(msg);
                                     if (topic != null) {
