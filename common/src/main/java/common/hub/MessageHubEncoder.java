@@ -1,5 +1,6 @@
-package common;
+package common.hub;
 
+import common.HubMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

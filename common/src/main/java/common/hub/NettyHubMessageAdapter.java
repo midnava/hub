@@ -1,5 +1,7 @@
-package common;
+package common.hub;
 
+import common.HubMessage;
+import common.MessageType;
 import io.netty.buffer.ByteBuf;
 import org.agrona.concurrent.UnsafeBuffer;
 

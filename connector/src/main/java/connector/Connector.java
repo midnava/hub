@@ -1,9 +1,9 @@
 package connector;
 
 import common.HubMessage;
-import common.MessageConnectorDecoder;
-import common.MessageConnectorEncoder;
 import common.MessageRate;
+import common.connector.MessageConnectorDecoder;
+import common.connector.MessageConnectorEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;

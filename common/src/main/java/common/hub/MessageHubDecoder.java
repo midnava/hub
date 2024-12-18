@@ -1,5 +1,7 @@
-package common;
+package common.hub;
 
+import common.HubMessage;
+import common.MessageType;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -9,7 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class MessageConnectorDecoder extends ByteToMessageDecoder {
+public class MessageHubDecoder extends ByteToMessageDecoder {
     private final ThreadLocal<UnsafeBuffer> bufferThreadLocal = ThreadLocal
             .withInitial(() -> new UnsafeBuffer(ByteBuffer.allocate(128 * 1024)));
 
