@@ -19,7 +19,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
 public class Connector {
-    private final EventLoopGroup group = new NioEventLoopGroup(2);
+    private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
     private final Consumer<HubMessage> messageConsumer;
 

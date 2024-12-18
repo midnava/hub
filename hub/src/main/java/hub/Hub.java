@@ -25,8 +25,8 @@ public class Hub {
     private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(4);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(4);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
         ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
 
 

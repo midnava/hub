@@ -43,7 +43,7 @@ public class SubscriberQueue {
                 if (message != null) {
                     if (channel.isActive()) {
                         while (!channel.isWritable()) {
-                            LockSupport.parkNanos(TimeUnit.MICROSECONDS.toNanos(500));
+                            LockSupport.parkNanos(TimeUnit.MICROSECONDS.toNanos(250));
                         }
 
                         channel.write(message);

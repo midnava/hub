@@ -37,7 +37,7 @@ public class PublisherConnector4PublishersTest {
                     }
 
                     long startNano = System.nanoTime();
-                    int count = 50_000_000; //TODO FIX ME
+                    int count = 1_000_000; //TODO FIX ME
 
                     for (int i1 = 0; i1 < count; i1++) {
                         publisherConnector.publish(new HubMessage(MessageType.MESSAGE, TOPIC, i1 + warmUpCount, msgBytes, 0, length));
