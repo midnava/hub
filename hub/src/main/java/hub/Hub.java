@@ -110,23 +110,19 @@ public class Hub {
                     System.out.println("MSG " + seqNo + ": " + msg.getByteBuf().getStringAscii(0));
                 }
 
-//                ByteBuf copiedMessage = msg.retainedDuplicate();
-//                broadcastMessage(topic, copiedMessage);
-
-//                List<hub.SubscriberQueue> topicSubscribers = subscribers.get(topic);
-//                if (topicSubscribers != null) {
-//                    for (hub.SubscriberQueue queue : topicSubscribers) {
-//                        if (queue.isActive()) {
-//                            queue.addMessage(msg);
-//                        }
-//                    }
-////                                            System.out.println("Message sent to subscribers of topic: " + topic);
-//                } else {
-////                                            System.out.println("No subscribers for topic: " + topic);
-//                }
-//            } else {
-//                throw new IllegalArgumentException(hubMessage.toString());
-//            }
+                List<hub.SubscriberQueue> topicSubscribers = subscribers.get(topic);
+                if (topicSubscribers != null) {
+                    for (hub.SubscriberQueue queue : topicSubscribers) {
+                        if (queue.isActive()) {
+                            queue.addMessage(msg);
+                        }
+                    }
+//                                            System.out.println("Message sent to subscribers of topic: " + topic);
+                } else {
+//                                            System.out.println("No subscribers for topic: " + topic);
+                }
+            } else {
+                throw new IllegalArgumentException(msg.toString());
             }
         }
 

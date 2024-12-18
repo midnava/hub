@@ -1,6 +1,6 @@
 package hub;
 
-import io.netty.buffer.ByteBuf;
+import common.HubMessage;
 import io.netty.channel.Channel;
 
 import java.util.concurrent.TimeUnit;
@@ -11,19 +11,18 @@ public class SubscriberQueue {
 
     public SubscriberQueue(Channel ch) {
         this.ch = ch;
-        ch.eventLoop().scheduleAtFixedRate(() -> ch.flush(), 1, 2, TimeUnit.MILLISECONDS);
+        ch.eventLoop().scheduleAtFixedRate(ch::flush, 1, 1, TimeUnit.MILLISECONDS);
     }
 
     public boolean isActive() {
         return ch.isActive();
     }
 
-    public void addMessage(ByteBuf msg) {
-        msg.retain();
+    public void addMessage(HubMessage msg) {
         handleMessage(msg);
     }
 
-    private void handleMessage(ByteBuf message) {
+    private void handleMessage(HubMessage message) {
         ch.write(message);
     }
 
