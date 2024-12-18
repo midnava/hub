@@ -32,13 +32,13 @@ public class PublisherConnectorTest {
         UnsafeBuffer msgBytes = new UnsafeBuffer(ByteBuffer.allocate(128 * 1024));
         int length = msgBytes.putStringAscii(0, "Hello Netty");
 
-        int warmUpCount = 100_000;
+        int warmUpCount = 1;
         for (int i = 0; i < warmUpCount; i++) { //warmup
             publisherConnector.publish(new HubMessage(MessageType.MESSAGE, TOPIC, i, msgBytes, 0, length));
         }
 
         long startNano = System.nanoTime();
-        int count = 50_000_000; //TODO FIX ME
+        int count = 5; //TODO FIX ME
 
         for (int i = 0; i < count; i++) {
             publisherConnector.publish(new HubMessage(MessageType.MESSAGE, TOPIC, i + warmUpCount, msgBytes, 0, length));

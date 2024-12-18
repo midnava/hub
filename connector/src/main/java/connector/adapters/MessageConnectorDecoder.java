@@ -1,4 +1,4 @@
-package common.connector;
+package connector.adapters;
 
 import common.HubMessage;
 import common.MessageType;

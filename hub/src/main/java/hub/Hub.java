@@ -3,9 +3,10 @@ package hub;
 import common.HubMessage;
 import common.MessageRate;
 import common.MessageType;
-import common.connector.MessageConnectorDecoder;
-import common.connector.MessageConnectorEncoder;
+import hub.adapters.MessageHubDecoder;
+import hub.adapters.MessageHubEncoder;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.*;
@@ -17,18 +18,21 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Queue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Hub {
     private static final int port = 8080;
     private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
-
+    private static final ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    private static final Map<Channel, Queue<ByteBuf>> clientQueues = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(2);
         EventLoopGroup workerGroup = new NioEventLoopGroup(2);
         ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
+
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
 
@@ -53,8 +57,8 @@ public class Hub {
                                     0,               // Смещение добавленной длины (нет дополнительных байт)
                                     4                // Байты длины включаются в итоговое сообщение)
                             ));
-                            ch.pipeline().addLast(new MessageConnectorDecoder(), new ServerHandler(ch));
-                            ch.pipeline().addLast(new MessageConnectorEncoder());
+                            ch.pipeline().addLast(new MessageHubDecoder(), new ServerHandler(ch));
+                            ch.pipeline().addLast(new MessageHubEncoder());
                             ch.config().setAllocator(allocator);
                         }
                     })
@@ -106,6 +110,8 @@ public class Hub {
                     System.out.println("MSG " + seqNo + ": " + msg.getByteBuf().getStringAscii(0));
                 }
 
+//                ByteBuf copiedMessage = msg.retainedDuplicate();
+//                broadcastMessage(topic, copiedMessage);
 
 //                List<hub.SubscriberQueue> topicSubscribers = subscribers.get(topic);
 //                if (topicSubscribers != null) {
@@ -125,9 +131,51 @@ public class Hub {
         }
 
         @Override
+        public void channelActive(ChannelHandlerContext ctx) {
+            Channel channel = ctx.channel();
+            clientQueues.put(channel, new ConcurrentLinkedQueue<>());
+            virtualThreadExecutor.submit(() -> processClientQueue(channel));
+            System.out.println("Client connected: " + channel.remoteAddress());
+        }
+
+        @Override
+        public void channelInactive(ChannelHandlerContext ctx) {
+            Channel channel = ctx.channel();
+            clientQueues.remove(channel);
+            System.out.println("Client disconnected: " + channel.remoteAddress());
+        }
+
+        @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             cause.printStackTrace();
             ctx.close();
+        }
+
+        private void broadcastMessage(String topic, ByteBuf message) {
+            clientQueues.forEach((channel, queue) -> {
+                ByteBuf queuedMessage = message.retainedDuplicate();
+                queue.add(queuedMessage);
+            });
+        }
+
+        private void processClientQueue(Channel channel) {
+            Queue<ByteBuf> queue = clientQueues.get(channel);
+            if (queue == null) return;
+
+            try {
+                while (channel.isActive()) {
+                    ByteBuf message = queue.poll();
+                    if (message != null) {
+                        channel.writeAndFlush(message).sync(); // Ensure messages are sent in order
+                    } else {
+                        Thread.sleep(1); // Avoid busy-waiting
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                System.err.println("Error processing queue for channel: " + e.getMessage());
+            }
         }
     }
 }
