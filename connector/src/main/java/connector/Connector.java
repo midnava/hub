@@ -91,15 +91,13 @@ public class Connector {
         if (channel != null) {
             channel.close();
         }
-        if (group != null) {
-            group.shutdownGracefully();
-        }
+
+        group.shutdownGracefully();
     }
 
     private class ClientHandler extends SimpleChannelInboundHandler<HubMessage> {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, HubMessage msg) {
-            // Simulate processing
             MessageRate.instance.incrementSubMsgRate();
             messageConsumer.accept(msg);
         }
