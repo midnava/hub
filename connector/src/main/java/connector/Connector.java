@@ -62,7 +62,7 @@ public class Connector {
         channel = future.channel();
         channel.eventLoop().scheduleAtFixedRate(() -> channel.flush(), 1, 1, TimeUnit.MILLISECONDS);
 
-        System.out.println("Publisher is starting...");
+        System.out.println("Netty Connector is starting...");
     }
 
     public void publish(HubMessage hubMessage) { //TODO FIX ME SeqNO - publish only UnsafeBuffer
@@ -73,7 +73,7 @@ public class Connector {
             channel.write(hubMessage);
             MessageRate.instance.incrementPubMsgRate();
         } else {
-            throw new IllegalArgumentException("Transport is not ready");
+            throw new IllegalArgumentException("Netty Connector is not ready");
         }
     }
 
