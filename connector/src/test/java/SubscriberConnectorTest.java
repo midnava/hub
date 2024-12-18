@@ -1,5 +1,4 @@
 import common.HubMessage;
-import common.MessageRate;
 import connector.Connector;
 
 import java.util.concurrent.TimeUnit;
@@ -11,7 +10,7 @@ public class SubscriberConnectorTest {
         Connector connector = new Connector(new Consumer<HubMessage>() {
             @Override
             public void accept(HubMessage message) {
-                MessageRate.instance.incrementServerSubMsgRate();
+                //something to do
             }
         });
 

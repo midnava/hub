@@ -18,7 +18,7 @@ public class MessageRate {
             @Override
             public void run() {
                 Date date = new Date();
-
+                System.out.println("--------------------------");
                 int pubRate = pubMsgRate.getAndSet(0);
                 if (pubRate > 0) {
                     System.out.println(date + ": pubMsgRate is " + pubRate);
@@ -38,6 +38,7 @@ public class MessageRate {
                 if (serverSubMsg > 0) {
                     System.out.println(date + ": serverSubMsgRate is " + serverSubMsg);
                 }
+                System.out.println("--------------------------");
             }
         }, 1, 1, TimeUnit.SECONDS);
     }

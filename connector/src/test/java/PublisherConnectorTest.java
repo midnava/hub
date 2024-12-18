@@ -1,5 +1,4 @@
 import common.HubMessage;
-import common.MessageRate;
 import common.MessageType;
 import connector.Connector;
 import org.agrona.concurrent.UnsafeBuffer;
@@ -16,7 +15,6 @@ public class PublisherConnectorTest {
         Connector publisherConnector = new Connector(new Consumer<HubMessage>() {
             @Override
             public void accept(HubMessage message) {
-                MessageRate.instance.incrementServerSubMsgRate();
                 System.out.println("Pub IN: " + message);
             }
         });

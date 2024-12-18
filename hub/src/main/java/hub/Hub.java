@@ -84,6 +84,7 @@ public class Hub {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, HubMessage msg) {
             MessageRate.instance.incrementServerSubMsgRate();
+
             long seqNo = msg.getSeqNo();
 
             if (currentIndex > 0 && currentIndex + 1 != seqNo) {
@@ -96,7 +97,7 @@ public class Hub {
 
             if (messageType == MessageType.SUBSCRIBE) {
                 Channel channel = ctx.channel();
-                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
+                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel, virtualThreadExecutor));
 
                 HubMessage response = new HubMessage(MessageType.SUBSCRIBE, "topic", globalSeqNo.incrementAndGet(), "subscribed on " + topic);
                 ctx.writeAndFlush(response);
