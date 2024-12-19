@@ -21,10 +21,18 @@ public class Connector {
     private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
     private final Consumer<HubMessage> messageConsumer;
-    private final MessageRate messageRate = new MessageRate("Connector");
+    private final MessageRate messageRate;
+
+    public Connector(String name, Consumer<HubMessage> messageConsumer) {
+        this.messageConsumer = messageConsumer;
+        this.messageRate = new MessageRate(name);
+
+//        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
+    }
 
     public Connector(Consumer<HubMessage> messageConsumer) {
         this.messageConsumer = messageConsumer;
+        this.messageRate = new MessageRate("Connector");
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
     }
@@ -34,18 +42,18 @@ public class Connector {
 
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.SO_RCVBUF, 64 * 1024 * 1024)
-                .option(ChannelOption.SO_SNDBUF, 64 * 1024 * 1024)
-//                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 2, 64 * 1024 * 1024))
-                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_RCVBUF, 32 * 1024 * 1024)
+                .option(ChannelOption.SO_SNDBUF, 32 * 1024 * 1024)
+//                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 12, 16 * 1024 * 1024))
+//                .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.AUTO_CLOSE, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
+                .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024 * 2, 1024 * 2, 1024 * 64))
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(
-                                64 * 1024, // Максимальная длина сообщения (защитный лимит)
+                                65 * 1024, // Максимальная длина сообщения (защитный лимит)
                                 0,               // Смещение длины в сообщении (начало буфера)
                                 4,               // Размер поля длины (int)
                                 0,               // Смещение добавленной длины (нет дополнительных байт)

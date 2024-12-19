@@ -11,7 +11,7 @@ public class SubscriberConnectorTest {
             @Override
             public void accept(HubMessage message) {
                 if (message.getSeqNo() % 100_000 == 0) {
-                    System.out.println("In Message: " + message.getSeqNo() + ", msg=" + message.getByteBuf().getStringAscii(0));
+                    System.out.println("In Message: " + message.getSeqNo() + ", msg=" + message.getByteBuf().getStringAscii(0, 4));
                 }
             }
         });

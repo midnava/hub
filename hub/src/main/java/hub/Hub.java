@@ -39,15 +39,15 @@ public class Hub {
                     .childOption(ChannelOption.SO_RCVBUF, 64 * 1024 * 1024)
                     .childOption(ChannelOption.SO_SNDBUF, 64 * 1024 * 1024)
                     .childOption(ChannelOption.AUTO_CLOSE, true)
-//                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 2, 64 * 1024 * 1024))
-                    .childOption(ChannelOption.TCP_NODELAY, true)
+//                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 12, 16 * 1024 * 1024))
+//                    .childOption(ChannelOption.TCP_NODELAY, true)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
+                    .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024 * 4, 1024 * 4, 1024 * 64))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(
-                                    64 * 1024, // Максимальная длина сообщения (защитный лимит)
+                                    65 * 1024, // Максимальная длина сообщения (защитный лимит)
                                     0,               // Смещение длины в сообщении (начало буфера)
                                     4,               // Размер поля длины (int)
                                     0,               // Смещение добавленной длины (нет дополнительных байт)

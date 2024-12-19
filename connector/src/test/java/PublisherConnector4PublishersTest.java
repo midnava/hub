@@ -17,26 +17,29 @@ public class PublisherConnector4PublishersTest {
     public static void main(String[] args) {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
-        for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            int finalJ = j;
+
             Executors.newSingleThreadScheduledExecutor().execute(() -> {
                 try {
                     AtomicInteger currentMsgRate = new AtomicInteger();
                     executorService.scheduleAtFixedRate(() -> currentMsgRate.set(0), 0, 1, TimeUnit.SECONDS);
 
-                    Connector publisherConnector = new Connector(message -> System.out.println("Pub IN: " + message));
+                    Connector publisherConnector = new Connector("Connector-" + finalJ, message -> System.out.println("Pub IN: " + message));
 
                     publisherConnector.start("localhost", 8080);
 
                     LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
 
-                    int capacity = 256;
-                    UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocate(capacity));
-                    for (int i1 = 0; i1 < capacity; i1++) {
-                        buffer.putByte(i1, (byte) i1);
-                    }
-
                     UnsafeBuffer msgBytes = new UnsafeBuffer(ByteBuffer.allocate(128 * 1024));
-                    int length = msgBytes.putStringAscii(0, "Hello Netty");
+                    int msgLength = 1024 * 2;
+                    StringBuilder builder = new StringBuilder(msgLength);
+                    builder.append("Hello Netty");
+                    for (int i = 0; i < msgLength; i++) {
+                        builder.append(i);
+                    }
+                    String msg = builder.toString();
+                    int length = msgBytes.putStringAscii(0, msg);
 
                     int warmUpCount = 50_0000;
                     for (int i1 = 0; i1 < warmUpCount; i1++) { //warmup

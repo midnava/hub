@@ -21,6 +21,7 @@ public class MessageRate {
             public void run() {
                 Date date = new Date();
                 String prefix = date + " : " + name + ": ";
+
                 int pubRate = connectorPubMsgRate.getAndSet(0);
                 if (pubRate > 0) {
                     System.out.println(prefix + "pubMsgRate is " + pubRate);
@@ -39,6 +40,11 @@ public class MessageRate {
                 int serverSubMsg = hubSubMsgRate.getAndSet(0);
                 if (serverSubMsg > 0) {
                     System.out.println(prefix + "hubSubMsgRate is " + serverSubMsg);
+                }
+
+                int total = pubRate + subMsg + +serverSubMsg + serverPubMsg;
+                if (total == 0) {
+                    System.out.println(prefix + "total is " + total);
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);

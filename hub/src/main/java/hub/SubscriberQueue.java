@@ -24,6 +24,14 @@ public class SubscriberQueue {
 
         channel.eventLoop().scheduleAtFixedRate(channel::flush, 1, 1, TimeUnit.MILLISECONDS);
         Executors.newSingleThreadScheduledExecutor().submit(this::handleMessages);
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("-----------------------------------");
+                System.out.println("Queue is for chanel [" + channel.remoteAddress() + "]: " + queueSize);
+                System.out.println("-----------------------------------");
+            }
+        }, 10, 10, TimeUnit.SECONDS);
     }
 
     public boolean isActive() {
