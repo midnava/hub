@@ -25,7 +25,7 @@ public class Hub {
     private static final Map<String, List<SubscriberQueue>> subscribers = new HashMap<>();
 
     public static void main(String[] args) throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
         EventLoopGroup workerGroup = new NioEventLoopGroup(2);
         ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
 
@@ -84,7 +84,7 @@ public class Hub {
             long seqNo = msg.getSeqNo();
 
             if (currentIndex > 0 && currentIndex + 1 != seqNo) {
-                System.out.println("Error: " + currentIndex + " vs " + seqNo);
+                // System.out.println("Error: " + currentIndex + " vs " + seqNo);
             }
             currentIndex = seqNo;
 
@@ -110,7 +110,7 @@ public class Hub {
                 if (topicSubscribers != null) {
                     for (hub.SubscriberQueue queue : topicSubscribers) {
                         if (queue.isActive()) {
-                            queue.addMessage(msg);
+                            // queue.addMessage(msg);
                         }
                     }
 //                                            System.out.println("Message sent to subscribers of topic: " + topic);

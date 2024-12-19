@@ -13,7 +13,7 @@ public class PublisherConnector4PublishersTest {
     public static final String TOPIC = "topic";
 
     public static void main(String[] args) {
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 4; i++) {
             Executors.newSingleThreadScheduledExecutor().execute(() -> {
                 try {
                     Connector publisherConnector = new Connector(message -> System.out.println("Pub IN: " + message));
@@ -37,10 +37,15 @@ public class PublisherConnector4PublishersTest {
                     }
 
                     long startNano = System.nanoTime();
-                    int count = 1_000_000; //TODO FIX ME
+                    int count = 500_000_000; //TODO FIX ME
+                    int msgRate = 50_000;
+                    int msgRatePerMs = (int) (TimeUnit.SECONDS.toMicros(1) / msgRate);
 
                     for (int i1 = 0; i1 < count; i1++) {
-                        publisherConnector.publish(new HubMessage(MessageType.MESSAGE, TOPIC, i1 + warmUpCount, msgBytes, 0, length));
+                        for (int j = 0; j < msgRatePerMs; j++) {
+                            publisherConnector.publish(new HubMessage(MessageType.MESSAGE, TOPIC, i1 + warmUpCount, msgBytes, 0, length));
+                        }
+                        Thread.sleep(1);
 
                         if (i1 % 1_000_000 == 0) {
                             System.out.println("Sent: " + i1);
