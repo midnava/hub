@@ -25,7 +25,7 @@ public class Hub {
 
     public static void main(String[] args) throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(2);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(2);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(6);
 
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
@@ -36,13 +36,13 @@ public class Hub {
                     .channel(NioServerSocketChannel.class)
 
                     .option(ChannelOption.SO_BACKLOG, 1024)
-                    .childOption(ChannelOption.SO_RCVBUF, 64 * 1024 * 1024)
-                    .childOption(ChannelOption.SO_SNDBUF, 64 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_RCVBUF, 4 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_SNDBUF, 4 * 1024 * 1024)
                     .childOption(ChannelOption.AUTO_CLOSE, true)
-//                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 12, 16 * 1024 * 1024))
-//                    .childOption(ChannelOption.TCP_NODELAY, true)
+                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(32 * 1024, 1024 * 1024))
+                    .childOption(ChannelOption.TCP_NODELAY, true)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024 * 4, 1024 * 4, 1024 * 64))
+                    .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024, 1024 * 8, 65536))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {

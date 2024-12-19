@@ -18,7 +18,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 
 public class Connector {
-    private final EventLoopGroup group = new NioEventLoopGroup(1);
+    private final EventLoopGroup group = new NioEventLoopGroup(2);
     private Channel channel;
     private final Consumer<HubMessage> messageConsumer;
     private final MessageRate messageRate;
@@ -42,13 +42,13 @@ public class Connector {
 
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.SO_RCVBUF, 32 * 1024 * 1024)
-                .option(ChannelOption.SO_SNDBUF, 32 * 1024 * 1024)
-//                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 12, 16 * 1024 * 1024))
-//                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_RCVBUF, 4 * 1024 * 1024)
+                .option(ChannelOption.SO_SNDBUF, 4 * 1024 * 1024)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(32 * 1024, 1024 * 1024))
+                .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.AUTO_CLOSE, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024 * 2, 1024 * 2, 1024 * 64))
+                .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024, 1024 * 8, 65536))
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
