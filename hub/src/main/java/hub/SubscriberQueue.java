@@ -3,8 +3,8 @@ package hub;
 import common.HubMessage;
 import common.MessageRate;
 import io.netty.channel.Channel;
+import org.agrona.concurrent.ManyToOneConcurrentArrayQueue;
 
-import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -12,10 +12,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
 public class SubscriberQueue {
-    public static final int MAX_CLIENT_QUEUE_CAPACITY = 1024 * 1024 * 1; //1M
+    public static final int MAX_CLIENT_QUEUE_CAPACITY = 1024 * 1024 * 5; //1M
     private final Channel channel;
     private final MessageRate messageRate;
-    private final Queue<HubMessage> queue = new ArrayDeque<>(MAX_CLIENT_QUEUE_CAPACITY); //10M
+    private final Queue<HubMessage> queue = new ManyToOneConcurrentArrayQueue<>(MAX_CLIENT_QUEUE_CAPACITY); //10M
     private final AtomicLong queueSize = new AtomicLong();
 
     public SubscriberQueue(Channel channel, MessageRate messageRate) {
