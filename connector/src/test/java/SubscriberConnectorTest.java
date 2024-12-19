@@ -10,7 +10,9 @@ public class SubscriberConnectorTest {
         Connector connector = new Connector(new Consumer<HubMessage>() {
             @Override
             public void accept(HubMessage message) {
-                //something to do
+                if (message.getSeqNo() % 100_000 == 0) {
+                    System.out.println("In Message: " + message.getSeqNo() + ", msg=" + message.getByteBuf().getStringAscii(0));
+                }
             }
         });
 

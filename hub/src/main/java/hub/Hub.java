@@ -110,7 +110,7 @@ public class Hub {
                 if (topicSubscribers != null) {
                     for (hub.SubscriberQueue queue : topicSubscribers) {
                         if (queue.isActive()) {
-                            // queue.addMessage(msg);
+                            queue.addMessage(msg);
                         }
                     }
 //                                            System.out.println("Message sent to subscribers of topic: " + topic);
