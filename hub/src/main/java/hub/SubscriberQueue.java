@@ -31,7 +31,6 @@ public class SubscriberQueue {
     }
 
     public void addMessage(HubMessage msg) {
-        channel.write(msg);
         boolean add = queue.add(msg);
         queueSize.incrementAndGet();
 
@@ -65,6 +64,10 @@ public class SubscriberQueue {
         } catch (Exception e) {
             System.err.println("Error processing queue for channel: " + e.getMessage());
         }
+    }
+
+    public Channel getChannel() {
+        return channel;
     }
 
     public void close() {
