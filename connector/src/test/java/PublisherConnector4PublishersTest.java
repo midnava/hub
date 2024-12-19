@@ -45,7 +45,7 @@ public class PublisherConnector4PublishersTest {
 
                     long startNano = System.nanoTime();
                     int count = 500_000_000; //TODO FIX ME
-                    int msgRate = 10_000;
+                    int msgRate = 25_000;
 
                     for (int i1 = 0; i1 < count; i1++) {
 
