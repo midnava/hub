@@ -22,6 +22,7 @@ public class Connector {
     private final EventLoopGroup group = new NioEventLoopGroup(1);
     private Channel channel;
     private final Consumer<HubMessage> messageConsumer;
+    private final MessageRate messageRate = new MessageRate("Connector");
 
     public Connector(Consumer<HubMessage> messageConsumer) {
         this.messageConsumer = messageConsumer;
@@ -71,7 +72,7 @@ public class Connector {
                 LockSupport.parkNanos(TimeUnit.MICROSECONDS.toNanos(500));
             }
             channel.write(hubMessage);
-            MessageRate.instance.incrementPubMsgRate();
+            messageRate.incrementConnectorPubMsgRate();
         } else {
             throw new IllegalArgumentException("Netty Connector is not ready");
         }
@@ -98,7 +99,7 @@ public class Connector {
     private class ClientHandler extends SimpleChannelInboundHandler<HubMessage> {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, HubMessage msg) {
-            MessageRate.instance.incrementSubMsgRate();
+            messageRate.incrementConnectorSubMsgRate();
             messageConsumer.accept(msg);
         }
 

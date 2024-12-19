@@ -72,14 +72,16 @@ public class Hub {
     private static class ServerHandler extends SimpleChannelInboundHandler<HubMessage> {
         private volatile long currentIndex = -1;
         private final AtomicLong globalSeqNo = new AtomicLong();
+        private final MessageRate messageRate;
 
         public ServerHandler(SocketChannel ch) {
+            this.messageRate = new MessageRate("HubServerHandler-" + ch.remoteAddress());
             System.out.println("Created: " + ch.metadata().toString());
         }
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, HubMessage msg) {
-            MessageRate.instance.incrementServerSubMsgRate();
+            messageRate.incrementServerSubMsgRate();
 
             long seqNo = msg.getSeqNo();
 
@@ -93,12 +95,12 @@ public class Hub {
 
             if (messageType == MessageType.SUBSCRIBE) {
                 Channel channel = ctx.channel();
-                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel));
+                subscribers.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(new SubscriberQueue(channel, messageRate));
 
                 HubMessage response = new HubMessage(MessageType.SUBSCRIBE, "topic", globalSeqNo.incrementAndGet(), "subscribed on " + topic);
                 ctx.writeAndFlush(response);
 
-                MessageRate.instance.incrementServerPubMsgRate();
+                messageRate.incrementServerPubMsgRate();
                 System.out.println("Subscriber added to topic: " + topic);
             } else if (messageType == MessageType.MESSAGE) {
 

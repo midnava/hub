@@ -12,13 +12,16 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
 public class SubscriberQueue {
-    public static final int MAX_CLIENT_QUEUE_CAPACITY = 1024 * 1024 * 10;
+    public static final int MAX_CLIENT_QUEUE_CAPACITY = 1024 * 1024 * 1; //1M
     private final Channel channel;
+    private final MessageRate messageRate;
     private final Queue<HubMessage> queue = new ArrayDeque<>(MAX_CLIENT_QUEUE_CAPACITY); //10M
     private final AtomicLong queueSize = new AtomicLong();
 
-    public SubscriberQueue(Channel channel) {
+    public SubscriberQueue(Channel channel, MessageRate messageRate) {
         this.channel = channel;
+        this.messageRate = messageRate;
+
         channel.eventLoop().scheduleAtFixedRate(channel::flush, 1, 1, TimeUnit.MILLISECONDS);
         Executors.newSingleThreadScheduledExecutor().submit(this::handleMessages);
     }
@@ -30,6 +33,8 @@ public class SubscriberQueue {
     public void addMessage(HubMessage msg) {
         channel.write(msg);
         boolean add = queue.add(msg);
+        queueSize.incrementAndGet();
+
         if (!add) {
             System.err.println("Huge queue on client side");
             close();
@@ -40,6 +45,7 @@ public class SubscriberQueue {
         try {
             while (channel.isActive()) {
                 HubMessage message = queue.poll();
+
                 if (message != null) {
                     if (channel.isActive()) {
                         while (!channel.isWritable()) {
@@ -47,7 +53,7 @@ public class SubscriberQueue {
                         }
 
                         channel.write(message);
-                        MessageRate.instance.incrementServerPubMsgRate();
+                        messageRate.incrementServerPubMsgRate();
                         queueSize.decrementAndGet();
                     } else {
                         throw new IllegalArgumentException("Netty Connector is not ready");

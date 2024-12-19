@@ -21,6 +21,7 @@ public class GCFreeBinaryServer {
     private final int port;
     private final Map<Channel, Queue<ByteBuf>> clientQueues = new ConcurrentHashMap<>();
     private final ExecutorService virtualThreadExecutor;
+    private final MessageRate messageRate = new MessageRate("GCFreeBinaryServer");
 
     public GCFreeBinaryServer(int port) {
         this.port = port;
@@ -52,7 +53,7 @@ public class GCFreeBinaryServer {
                             ch.pipeline().addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
-                                    MessageRate.instance.incrementServerSubMsgRate();
+                                    messageRate.incrementServerSubMsgRate();
                                     // Parse topic and prepare message for broadcast
                                     String topic = extractTopic(msg);
                                     if (topic != null) {

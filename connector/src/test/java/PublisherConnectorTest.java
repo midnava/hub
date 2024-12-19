@@ -61,7 +61,8 @@ public class PublisherConnectorTest {
             }
 
             if (i1 % 1_000_000 == 0) {
-                System.out.println("Sent: " + i1);
+                System.out.println("Sent and sleep: " + i1);
+                Thread.sleep(5000);
             }
         }
 

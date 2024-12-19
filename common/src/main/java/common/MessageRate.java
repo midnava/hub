@@ -2,60 +2,61 @@ package common;
 
 import java.util.Date;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MessageRate {
-    private final AtomicInteger pubMsgRate = new AtomicInteger();
-    private final AtomicInteger subMsgRate = new AtomicInteger();
-    private final AtomicInteger serverPubMsgRate = new AtomicInteger();
-    private final AtomicInteger serverSubMsgRate = new AtomicInteger();
+    private static final ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
 
-    public static final MessageRate instance = new MessageRate();
+    private final AtomicInteger connectorPubMsgRate = new AtomicInteger();
+    private final AtomicInteger connectorSubMsgRate = new AtomicInteger();
+    private final AtomicInteger hubPubMsgRate = new AtomicInteger();
+    private final AtomicInteger hubSubMsgRate = new AtomicInteger();
 
-    public MessageRate() {
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
+
+    public MessageRate(String name) {
+        SCHEDULED_EXECUTOR_SERVICE.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 Date date = new Date();
-                System.out.println("--------------------------");
-                int pubRate = pubMsgRate.getAndSet(0);
+                String prefix = date + " : " + name + ": ";
+                int pubRate = connectorPubMsgRate.getAndSet(0);
                 if (pubRate > 0) {
-                    System.out.println(date + ": pubMsgRate is " + pubRate);
+                    System.out.println(prefix + "pubMsgRate is " + pubRate);
                 }
 
-                int subMsg = subMsgRate.getAndSet(0);
+                int subMsg = connectorSubMsgRate.getAndSet(0);
                 if (subMsg > 0) {
-                    System.out.println(date + ": subMsgRate is " + subMsg);
+                    System.out.println(prefix + "subMsgRate is " + subMsg);
                 }
 
-                int serverPubMsg = serverPubMsgRate.getAndSet(0);
+                int serverPubMsg = hubPubMsgRate.getAndSet(0);
                 if (serverPubMsg > 0) {
-                    System.out.println(date + ": serverPubMsgRate is " + serverPubMsg);
+                    System.out.println(prefix + "hubPubMsgRate is " + serverPubMsg);
                 }
 
-                int serverSubMsg = serverSubMsgRate.getAndSet(0);
+                int serverSubMsg = hubSubMsgRate.getAndSet(0);
                 if (serverSubMsg > 0) {
-                    System.out.println(date + ": serverSubMsgRate is " + serverSubMsg);
+                    System.out.println(prefix + "hubSubMsgRate is " + serverSubMsg);
                 }
-                System.out.println("--------------------------");
             }
         }, 1, 1, TimeUnit.SECONDS);
     }
 
-    public void incrementPubMsgRate() {
-        pubMsgRate.incrementAndGet();
+    public void incrementConnectorPubMsgRate() {
+        connectorPubMsgRate.incrementAndGet();
     }
 
-    public void incrementSubMsgRate() {
-        subMsgRate.incrementAndGet();
+    public void incrementConnectorSubMsgRate() {
+        connectorSubMsgRate.incrementAndGet();
     }
 
     public void incrementServerPubMsgRate() {
-        serverPubMsgRate.incrementAndGet();
+        hubPubMsgRate.incrementAndGet();
     }
 
     public void incrementServerSubMsgRate() {
-        serverSubMsgRate.incrementAndGet();
+        hubSubMsgRate.incrementAndGet();
     }
 }
