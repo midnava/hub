@@ -34,9 +34,9 @@ public class Connector {
 
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.SO_RCVBUF, 32 * 1024 * 1024)
-                .option(ChannelOption.SO_SNDBUF, 32 * 1024 * 1024)
-                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 16, 32 * 1024 * 1024))
+                .option(ChannelOption.SO_RCVBUF, 16 * 1024 * 1024)
+                .option(ChannelOption.SO_SNDBUF, 16 * 1024 * 1024)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 8, 16 * 1024 * 1024))
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.AUTO_CLOSE, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)

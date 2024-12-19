@@ -36,10 +36,10 @@ public class Hub {
                     .channel(NioServerSocketChannel.class)
 
                     .option(ChannelOption.SO_BACKLOG, 1024)
-                    .childOption(ChannelOption.SO_RCVBUF, 32 * 1024 * 1024)
-                    .childOption(ChannelOption.SO_SNDBUF, 32 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_RCVBUF, 16 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_SNDBUF, 16 * 1024 * 1024)
                     .childOption(ChannelOption.AUTO_CLOSE, true)
-                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 16, 32 * 1024 * 1024))
+                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 8, 16 * 1024 * 1024))
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
