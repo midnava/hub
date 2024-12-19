@@ -4,7 +4,10 @@ import connector.Connector;
 import org.agrona.concurrent.UnsafeBuffer;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class PublisherConnectorTest {
@@ -12,6 +15,11 @@ public class PublisherConnectorTest {
     public static final String TOPIC = "topic";
 
     public static void main(String[] args) throws InterruptedException {
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+        AtomicInteger currentMsgRate = new AtomicInteger();
+        executorService.scheduleAtFixedRate(() -> currentMsgRate.set(0), 0, 1, TimeUnit.SECONDS);
+
         Connector publisherConnector = new Connector(new Consumer<HubMessage>() {
             @Override
             public void accept(HubMessage message) {
@@ -40,14 +48,17 @@ public class PublisherConnectorTest {
         long startNano = System.nanoTime();
         int count = 500_000_000; //TODO FIX ME
         int msgRate = 50_000;
-        int msgRatePerMs = (int) (TimeUnit.SECONDS.toMicros(1) / msgRate);
-        System.out.println("---MsgRate is " + msgRate + ", MsgRate per ms is " + msgRatePerMs);
 
         for (int i1 = 0; i1 < count; i1++) {
-            for (int j = 0; j < msgRatePerMs; j++) {
+
+            int c = currentMsgRate.incrementAndGet();
+            if (c < msgRate) {
                 publisherConnector.publish(new HubMessage(MessageType.MESSAGE, TOPIC, i1 + warmUpCount, msgBytes, 0, length));
+            } else {
+                while (currentMsgRate.get() > 0) {
+                    Thread.yield();
+                }
             }
-            Thread.sleep(1);
 
             if (i1 % 1_000_000 == 0) {
                 System.out.println("Sent: " + i1);
