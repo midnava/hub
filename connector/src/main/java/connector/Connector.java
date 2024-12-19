@@ -6,8 +6,7 @@ import common.MessageType;
 import connector.adapters.MessageConnectorDecoder;
 import connector.adapters.MessageConnectorEncoder;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -32,7 +31,6 @@ public class Connector {
 
     public void start(String host, int port) throws InterruptedException {
         Bootstrap bootstrap = new Bootstrap();
-        ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
 
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
@@ -41,6 +39,7 @@ public class Connector {
                 .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 16, 32 * 1024 * 1024))
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.AUTO_CLOSE, true)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
@@ -54,7 +53,6 @@ public class Connector {
                         ch.pipeline().addLast(new ReconnectClientHandler(bootstrap, host, port));
                         ch.pipeline().addLast(new MessageConnectorDecoder(), new ClientHandler());
                         ch.pipeline().addLast(new MessageConnectorEncoder());
-                        ch.config().setAllocator(allocator);
                     }
                 })
                 .validate();

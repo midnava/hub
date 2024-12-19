@@ -6,8 +6,7 @@ import common.MessageType;
 import hub.adapters.MessageHubDecoder;
 import hub.adapters.MessageHubEncoder;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -27,7 +26,6 @@ public class Hub {
     public static void main(String[] args) throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(2);
         EventLoopGroup workerGroup = new NioEventLoopGroup(2);
-        ByteBufAllocator allocator = new UnpooledByteBufAllocator(true);
 
 
 //        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
@@ -43,6 +41,7 @@ public class Hub {
                     .childOption(ChannelOption.AUTO_CLOSE, true)
                     .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 16, 32 * 1024 * 1024))
                     .childOption(ChannelOption.TCP_NODELAY, true)
+                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
@@ -55,7 +54,6 @@ public class Hub {
                             ));
                             ch.pipeline().addLast(new MessageHubDecoder(), new ServerHandler(ch));
                             ch.pipeline().addLast(new MessageHubEncoder());
-                            ch.config().setAllocator(allocator);
                         }
                     })
                     .validate();
