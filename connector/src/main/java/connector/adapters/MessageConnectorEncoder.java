@@ -1,17 +1,17 @@
 package connector.adapters;
 
 import common.HubMessage;
+import common.StringPool;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-import java.nio.charset.StandardCharsets;
-
 public class MessageConnectorEncoder extends MessageToByteEncoder<HubMessage> {
     @Override
     protected void encode(ChannelHandlerContext ctx, HubMessage msg, ByteBuf out) {
-        byte[] topicBytes = msg.getTopic().getBytes(StandardCharsets.US_ASCII);
+        byte[] topicBytes = StringPool.INSTANCE.getStringBytes(msg.getTopic());
         int topicLength = topicBytes.length;
+
         int offset = msg.getOffset();
         int buffLength = msg.getBuffLength();
 

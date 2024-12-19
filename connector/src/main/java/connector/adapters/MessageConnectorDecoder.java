@@ -2,13 +2,13 @@ package connector.adapters;
 
 import common.HubMessage;
 import common.MessageType;
+import common.StringPool;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.agrona.concurrent.UnsafeBuffer;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class MessageConnectorDecoder extends ByteToMessageDecoder {
@@ -22,10 +22,11 @@ public class MessageConnectorDecoder extends ByteToMessageDecoder {
 
         int topicLength = in.readInt();
 
-        byte[] topicBytes = new byte[topicLength];
-        in.readBytes(topicBytes);
+//        byte[] topicBytes = new byte[topicLength];
+//        in.readBytes(topicBytes); //TODO FIX ME
+        in.skipBytes(topicLength);
 
-        String topic = new String(topicBytes, StandardCharsets.US_ASCII);
+        String topic = StringPool.INSTANCE.getString(null); //TODO FIX ME
 
         UnsafeBuffer buffer = bufferThreadLocal.get();
         int offset = in.readInt();

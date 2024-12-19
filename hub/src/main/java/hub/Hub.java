@@ -36,12 +36,13 @@ public class Hub {
                     .channel(NioServerSocketChannel.class)
 
                     .option(ChannelOption.SO_BACKLOG, 1024)
-                    .childOption(ChannelOption.SO_RCVBUF, 16 * 1024 * 1024)
-                    .childOption(ChannelOption.SO_SNDBUF, 16 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_RCVBUF, 64 * 1024 * 1024)
+                    .childOption(ChannelOption.SO_SNDBUF, 64 * 1024 * 1024)
                     .childOption(ChannelOption.AUTO_CLOSE, true)
-                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 8, 16 * 1024 * 1024))
+//                    .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1024 * 1024 * 2, 64 * 1024 * 1024))
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                    .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator())
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
@@ -103,7 +104,7 @@ public class Hub {
             } else if (messageType == MessageType.MESSAGE) {
 
                 if (seqNo % 1_000_000 == 0) {
-                    System.out.println("MSG " + seqNo + ": " + msg.getByteBuf().getStringAscii(0));
+                    System.out.println("MSG " + seqNo + ": " + msg.getByteBuf().getStringAscii(0, 5));
                 }
 
                 List<hub.SubscriberQueue> topicSubscribers = subscribers.get(topic);

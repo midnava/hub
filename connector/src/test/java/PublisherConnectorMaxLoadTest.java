@@ -30,7 +30,14 @@ public class PublisherConnectorMaxLoadTest {
         }
 
         UnsafeBuffer msgBytes = new UnsafeBuffer(ByteBuffer.allocate(128 * 1024));
-        int length = msgBytes.putStringAscii(0, "Hello Netty");
+        int msgLength = 1024 * 2;
+        StringBuilder builder = new StringBuilder(msgLength);
+        builder.append("Hello Netty");
+        for (int i = 0; i < msgLength; i++) {
+            builder.append(i);
+        }
+        String msg = builder.toString();
+        int length = msgBytes.putStringAscii(0, msg);
 
         int warmUpCount = 1000;
         for (int i = 0; i < warmUpCount; i++) { //warmup
